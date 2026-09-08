@@ -34,12 +34,13 @@ export type EvidenceSnapshot = {
 export class InMemoryEvidenceStore {
   #items: Evidence[] = [];
   append(e: Evidence) {
-    this.#items.push(e);
+    this.#items.push(structuredClone(e));
   }
   snapshot(generation: EngineeringGenerationId, now: string, maxAgeMs: number): EvidenceSnapshot {
     const evidence = this.#items
       .filter((e) => e.generation === generation)
-      .sort((a, b) => a.evidenceId.localeCompare(b.evidenceId));
+      .sort((a, b) => a.evidenceId.localeCompare(b.evidenceId))
+      .map((e) => structuredClone(e));
     const fresh =
       evidence.length > 0 &&
       evidence.every((e) => e.quality === 'GOOD' && Date.parse(now) - Date.parse(e.measuredAt) <= maxAgeMs);

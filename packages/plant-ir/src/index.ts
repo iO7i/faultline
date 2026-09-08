@@ -22,7 +22,42 @@ export type EngineeringSource = {
     | 'DEXPI';
   scope: string;
   approval: { status: 'APPROVED' | 'DRAFT'; approvedBy?: string; approvedAt?: string };
+  declaration?: Readonly<Record<string, unknown>>;
   digest: string;
+};
+export type SyntheticCstrEngineeringFixture = {
+  generation: string;
+  coolingAvailableCapacityPercent: number;
+  feedAdjustMaxKgPerS: number;
+  synthetic: true;
+};
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+export const parseSyntheticCstrEngineeringFixture = (
+  value: unknown,
+): { ok: true; fixture: SyntheticCstrEngineeringFixture } | { ok: false; error: string } => {
+  if (!isRecord(value)) return { ok: false, error: 'FIXTURE_MUST_BE_AN_OBJECT' };
+  const { generation, coolingAvailableCapacityPercent, feedAdjustMaxKgPerS, synthetic } = value;
+  if (typeof generation !== 'string' || !/^[A-Za-z0-9._:-]+$/.test(generation))
+    return { ok: false, error: 'INVALID_GENERATION' };
+  if (
+    typeof coolingAvailableCapacityPercent !== 'number' ||
+    !Number.isFinite(coolingAvailableCapacityPercent) ||
+    coolingAvailableCapacityPercent < 0 ||
+    coolingAvailableCapacityPercent > 100
+  )
+    return { ok: false, error: 'INVALID_COOLING_CAPACITY_PERCENT' };
+  if (
+    typeof feedAdjustMaxKgPerS !== 'number' ||
+    !Number.isFinite(feedAdjustMaxKgPerS) ||
+    feedAdjustMaxKgPerS < 0
+  )
+    return { ok: false, error: 'INVALID_FEED_ADJUST_BOUND' };
+  if (synthetic !== true) return { ok: false, error: 'SYNTHETIC_MARKER_REQUIRED' };
+  return {
+    ok: true,
+    fixture: { generation, coolingAvailableCapacityPercent, feedAdjustMaxKgPerS, synthetic: true },
+  };
 };
 export type Dimension =
   'Pressure' | 'Temperature' | 'MassFlow' | 'Percent' | 'Dimensionless' | 'Boolean' | 'DiscreteState';

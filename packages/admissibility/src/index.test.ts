@@ -27,4 +27,29 @@ describe('admissibility', () => {
       fullReevaluate(result.r17.contract, result.snapshot, result.intent),
     );
   });
+  it('keeps generation, target, unit, and capability failures independently inspectable', () => {
+    const result = runDemos();
+    expect(evaluateAdmissibility(result.r18.contract, result.snapshot, result.intent)).toMatchObject({
+      status: 'REJECTED',
+      code: 'ENGINEERING_GENERATION_CHANGED',
+    });
+    expect(
+      evaluateAdmissibility(result.r17.contract, result.snapshot, {
+        ...result.intent,
+        targetAssetId: 'OTHER' as typeof result.intent.targetAssetId,
+      }),
+    ).toMatchObject({ status: 'REJECTED', code: 'ACTION_ARGUMENTS_CHANGED' });
+    expect(
+      evaluateAdmissibility(result.r17.contract, result.snapshot, {
+        ...result.intent,
+        operation: { ...result.intent.operation, value: { value: 124, unit: 'degC' } },
+      }),
+    ).toMatchObject({ status: 'REJECTED', code: 'UNIT_MISMATCH' });
+    expect(
+      evaluateAdmissibility(result.r17.contract, result.snapshot, {
+        ...result.intent,
+        capabilityId: 'undeclared' as typeof result.intent.capabilityId,
+      }),
+    ).toMatchObject({ status: 'REJECTED', code: 'CAPABILITY_NOT_PERMITTED' });
+  });
 });

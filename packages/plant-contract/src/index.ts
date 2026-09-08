@@ -92,6 +92,8 @@ export function compilePlantContract(input: CompileInput): CompileResult {
 
   for (const duplicate of duplicates(input.ir.nodes.map((node) => node.assetId)))
     diagnostics.push(error('DUPLICATE_IDENTIFIER', `Duplicate Plant IR node ${duplicate}`));
+  for (const duplicate of duplicates(input.sources.map((source) => source.sourceId)))
+    diagnostics.push(error('DUPLICATE_IDENTIFIER', `Duplicate engineering source ${duplicate}`));
   for (const duplicate of duplicates(input.capabilities.map((capability) => capability.id)))
     diagnostics.push(error('DUPLICATE_IDENTIFIER', `Duplicate capability ${duplicate}`));
   for (const duplicate of duplicates(input.constraints.map((constraint) => constraint.id)))
@@ -115,6 +117,11 @@ export function compilePlantContract(input: CompileInput): CompileResult {
           error('MISSING_PROVENANCE', `Node ${node.assetId} references missing source ${sourceId}`),
         );
   }
+  for (const edge of input.ir.edges)
+    if (!findNode(input.ir, edge.from) || !findNode(input.ir, edge.to))
+      diagnostics.push(
+        error('UNRESOLVED_ASSET', `Topology edge ${edge.from}->${edge.to} has an unresolved endpoint`),
+      );
   for (const capability of input.capabilities) {
     const node = findNode(input.ir, capability.target);
     if (!node) {
@@ -159,6 +166,14 @@ export function compilePlantContract(input: CompileInput): CompileResult {
     if (constraint.max && !unitMatchesDimension(constraint.max.unit, target?.dimension))
       diagnostics.push(
         error('UNIT_MISMATCH', `Constraint ${constraint.id} unit is incompatible with ${constraint.target}`),
+      );
+    if (constraint.kind === 'ARGUMENT_BOUND' && !constraint.max)
+      diagnostics.push(
+        error('INVALID_CAPABILITY_DECLARATION', `Constraint ${constraint.id} is missing its argument bound`),
+      );
+    if (constraint.kind === 'DEPENDENCY_REQUIRED' && !constraint.dependency)
+      diagnostics.push(
+        error('INVALID_CAPABILITY_DECLARATION', `Constraint ${constraint.id} is missing its dependency`),
       );
     if (constraint.dependency && !findNode(input.ir, constraint.dependency))
       diagnostics.push(
@@ -258,40 +273,50 @@ export class InMemoryPlantContractRegistry implements PlantContractRegistry {
 
 export type PendingAuthority = { permitId: string; dependencyClosure: readonly string[] };
 export type ChangeImpact = {
+  comparedFrom: { generation: EngineeringGenerationId; contractDigest: PlantContractDigest };
+  comparedTo: { generation: EngineeringGenerationId; contractDigest: PlantContractDigest };
   changed: readonly string[];
   affected: readonly string[];
   affectedPermits: readonly string[];
   conservative: boolean;
+  coverage: 'COMPLETE' | 'UNCERTAIN';
 };
 export const compareContracts = (
   before: PlantContractArtifact,
   after: PlantContractArtifact,
   pending: readonly PendingAuthority[] = [],
 ): ChangeImpact => {
-  const changedSources = after.sourceRevisions
-    .filter((source) => {
-      const previous = before.sourceRevisions.find((candidate) => candidate.sourceId === source.sourceId);
-      return !previous || previous.digest !== source.digest;
-    })
-    .map((source) => `engineering-source:${source.sourceId}:${source.revision}`);
-  const changedNodes = Object.keys(after.nodeDigests)
-    .filter((id) => before.nodeDigests[id] !== after.nodeDigests[id])
-    .map((id) => `plant-ir-node:${id}`);
-  const changedSourceIds = changedSources.map((entry) => entry.split(':')[1]);
-  const affectedConstraints = after.constraints
-    .filter((constraint) => changedSourceIds.includes(constraint.sourceId))
-    .map((constraint) => `constraint:${constraint.id}`);
-  const affectedCapabilities = after.capabilities
-    .filter((capability) =>
-      after.constraints.some(
-        (constraint) =>
-          constraint.capabilityId === capability.id &&
-          (changedSourceIds.includes(constraint.sourceId) ||
-            changedNodes.includes(`plant-ir-node:${constraint.target}`)),
-      ),
-    )
+  const beforeSources = new Map(before.sourceRevisions.map((source) => [source.sourceId, source]));
+  const afterSources = new Map(after.sourceRevisions.map((source) => [source.sourceId, source]));
+  const changedSourceIds = [...new Set([...beforeSources.keys(), ...afterSources.keys()])].filter(
+    (sourceId) => {
+      const previous = beforeSources.get(sourceId);
+      const current = afterSources.get(sourceId);
+      return !previous || !current || previous.digest !== current.digest;
+    },
+  );
+  const changedSources = changedSourceIds.map((sourceId) => {
+    const current = afterSources.get(sourceId);
+    return current
+      ? `engineering-source:${sourceId}:${current.revision}`
+      : `engineering-source:${sourceId}:REMOVED`;
+  });
+  const changedNodeIds = [
+    ...new Set([...Object.keys(before.nodeDigests), ...Object.keys(after.nodeDigests)]),
+  ].filter((id) => before.nodeDigests[id] !== after.nodeDigests[id]);
+  const changedNodes = changedNodeIds.map((id) => `plant-ir-node:${id}`);
+  const provenanceLinks = [before, after].flatMap((contract) =>
+    changedSourceIds.flatMap((sourceId) => contract.provenanceIndex[sourceId] ?? []),
+  );
+  const affectedBySource = provenanceLinks.filter(
+    (reference) => reference.startsWith('constraint:') || reference.startsWith('capability:'),
+  );
+  const affectedByChangedNode = [before, after]
+    .flatMap((contract) => contract.capabilities)
+    .filter((capability) => changedNodeIds.includes(capability.target))
     .map((capability) => `capability:${capability.id}`);
-  const affected = [...new Set([...affectedConstraints, ...affectedCapabilities])].sort();
+  const affected = [...new Set([...affectedBySource, ...affectedByChangedNode])].sort();
+  const affectedCapabilities = affected.filter((reference) => reference.startsWith('capability:'));
   const affectedPermits = pending
     .filter(
       (permit) =>
@@ -303,5 +328,13 @@ export const compareContracts = (
     .map((permit) => permit.permitId)
     .sort();
   const changed = [...changedSources, ...changedNodes].sort();
-  return { changed, affected, affectedPermits, conservative: changed.length > 0 };
+  return {
+    comparedFrom: { generation: before.generation, contractDigest: before.digest },
+    comparedTo: { generation: after.generation, contractDigest: after.digest },
+    changed,
+    affected,
+    affectedPermits,
+    conservative: changed.length > 0,
+    coverage: 'COMPLETE',
+  };
 };

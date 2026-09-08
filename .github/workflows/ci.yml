@@ -10,6 +10,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm build
@@ -17,3 +18,5 @@ jobs:
       - run: pnpm demo:stale-permit
       - run: pnpm demo:ambiguous-completion
       - run: pnpm case:verify
+      - run: pnpm exec tsx apps/cli/src/index.ts compile fixtures/cstr/engineering/R17.json
+      - run: pnpm exec tsx apps/cli/src/index.ts diff R17 R18

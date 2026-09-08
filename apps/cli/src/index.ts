@@ -1,13 +1,26 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { createWalkingSkeletonBundle, compileDemoGeneration, runDemos } from './demo.js';
+import { createWalkingSkeletonBundle, compileSyntheticCstrFixture, runDemos } from './demo.js';
 import { compareContracts } from '../../../packages/plant-contract/src/index.js';
 import { parseCaseBundle, verifyCaseBundle } from '../../../packages/case-bundle/src/index.js';
+import { parseSyntheticCstrEngineeringFixture } from '../../../packages/plant-ir/src/index.js';
 
 const [command, subcommand, argument] = process.argv.slice(2);
 const defaultBundlePath = resolve('case-bundles/cstr-walking-skeleton.case.json');
-const generationFrom = (value: string | undefined): 'R17' | 'R18' | null =>
-  value?.includes('R17') ? 'R17' : value?.includes('R18') ? 'R18' : null;
+const fixturePathFrom = (value: string | undefined) =>
+  value === 'R17' || value === 'R18'
+    ? resolve(`fixtures/cstr/engineering/${value}.json`)
+    : value
+      ? resolve(value)
+      : null;
+const compileFixtureArgument = (value: string | undefined) => {
+  const path = fixturePathFrom(value);
+  if (!path) throw new Error('expected an engineering fixture path or R17/R18 shorthand');
+  const raw: unknown = JSON.parse(readFileSync(path, 'utf8'));
+  const parsed = parseSyntheticCstrEngineeringFixture(raw);
+  if (!parsed.ok) throw new Error(`INVALID_SYNTHETIC_CSTR_FIXTURE:${parsed.error}`);
+  return { path, compiled: compileSyntheticCstrFixture(parsed.fixture) };
+};
 const writeBundle = () => {
   const bundle = createWalkingSkeletonBundle();
   writeFileSync(defaultBundlePath, `${JSON.stringify(bundle, null, 2)}\n`, 'utf8');
@@ -25,7 +38,7 @@ const printDemo = (scope: 'all' | 'stale-permit' | 'ambiguous-completion') => {
     console.log(`affected               ${result.impact.affected.join(', ')}`);
     console.log(`pre-dispatch           ${result.stale.status}`);
     console.log(`reason                 ${result.stale.code}`);
-    console.log(`simulator dispatches   ${result.stale.effectCount}`);
+    console.log(`simulator dispatches   ${result.staleEffectCount}`);
     console.log('RESULT                 PASS');
   }
   if (scope === 'all') console.log('');
@@ -51,9 +64,9 @@ if (command === 'demo') {
   else if (subcommand === 'ambiguous-completion') printDemo('ambiguous-completion');
   else printDemo('all');
 } else if (command === 'compile') {
-  const generation = generationFrom(subcommand);
-  if (!generation) throw new Error('compile expects a path containing R17 or R18');
-  const { contract } = compileDemoGeneration(generation);
+  const { path, compiled } = compileFixtureArgument(subcommand);
+  const { contract } = compiled;
+  console.log(`Fixture        ${path}`);
   console.log(`Plant Contract ${contract.contractId}`);
   console.log(`generation      ${contract.generation}`);
   console.log(`sources         ${contract.sourceRevisions.length}`);
@@ -61,9 +74,9 @@ if (command === 'demo') {
   console.log(`capabilities    ${contract.capabilities.length}`);
   console.log(`digest          sha256:${contract.digest}`);
 } else if (command === 'contract' && subcommand === 'inspect') {
-  const generation = generationFrom(argument);
-  if (!generation) throw new Error('contract inspect expects R17 or R18');
-  const { contract } = compileDemoGeneration(generation);
+  const { path, compiled } = compileFixtureArgument(argument);
+  const { contract } = compiled;
+  console.log(`Fixture: ${path}`);
   console.log(`Contract: ${contract.contractId}`);
   console.log(
     `Sources: ${contract.sourceRevisions.map((source) => `${source.sourceId}@${source.revision}`).join(', ')}`,
@@ -71,13 +84,11 @@ if (command === 'demo') {
   console.log(`Provenance: ${JSON.stringify(contract.provenanceIndex)}`);
   console.log(`Monitors: ${contract.runtimeMonitors.map((monitor) => monitor.constraintId).join(', ')}`);
 } else if (command === 'diff') {
-  const before = generationFrom(subcommand);
-  const after = generationFrom(argument);
-  if (!before || !after) throw new Error('diff expects two generations: diff R17 R18');
-  const impact = compareContracts(
-    compileDemoGeneration(before).contract,
-    compileDemoGeneration(after).contract,
-  );
+  const before = compileFixtureArgument(subcommand);
+  const after = compileFixtureArgument(argument);
+  const impact = compareContracts(before.compiled.contract, after.compiled.contract);
+  console.log(`Before: ${before.path}`);
+  console.log(`After: ${after.path}`);
   console.log(`Changed: ${impact.changed.join(', ') || 'none'}`);
   console.log(`Affected: ${impact.affected.join(', ') || 'none'}`);
   console.log(`Conservative: ${impact.conservative}`);

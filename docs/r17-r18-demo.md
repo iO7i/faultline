@@ -4,4 +4,4 @@ R17 compiles an approved cooling-capacity source and admits the exact synthetic 
 
 Before dispatch, R18 changes the same source revision and tightens the recorded argument bound. Contract comparison identifies the changed engineering source, `CoolingAvailable`, and `process.feed.adjust`; the pending permit's declared closure intersects that change.
 
-Pre-dispatch validation returns `REQUIRES_REEVALUATION / ENGINEERING_BASIS_CHANGED`. The executor does not call the simulator. This is conservative invalidation: unproven dependency coverage is never treated as unaffected.
+The comparison artifact records both the R17 and R18 contract digests. Pre-dispatch validation returns `REQUIRES_REEVALUATION / ENGINEERING_BASIS_CHANGED`; the executor does not call the simulator. A missing, uncertain, or differently paired comparison artifact instead returns `DEPENDENCY_IMPACT_UNKNOWN`. This is conservative invalidation: unproven dependency coverage is never treated as unaffected.

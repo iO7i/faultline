@@ -8,13 +8,13 @@
         "generation": "R17",
         "plantIrDigest": "4d209ebf1f29e30d14265984329ee9ea7c5d3609c7bbbcb459c12c82c51ddcd2",
         "sourceDigests": [
-          "feeef1b3bb3cb593f11a0fff791265d6eba37a38b704b4509bc4c102f0551fcf"
+          "3b58f2313afb58ba2d99b589bd346be83039ed0c6c0a3e4c45929b5e398090cf"
         ],
         "sourceRevisions": [
           {
             "sourceId": "cooling-capacity",
             "revision": "R17",
-            "digest": "feeef1b3bb3cb593f11a0fff791265d6eba37a38b704b4509bc4c102f0551fcf"
+            "digest": "3b58f2313afb58ba2d99b589bd346be83039ed0c6c0a3e4c45929b5e398090cf"
           }
         ],
         "nodeDigests": {
@@ -66,19 +66,19 @@
         ],
         "compilerVersion": "0.1.0",
         "contractId": "contract:R17",
-        "digest": "2a9dad57e63e1b0d08a70d0b8e7a2027a7c6e5e8c59fb0bc488b187a57f693e9"
+        "digest": "d361e68943766c0920f3af6d5ab56d4c24e28dd7c8a2d1df85dc165703c842d2"
       },
       "r18": {
         "generation": "R18",
         "plantIrDigest": "bedc4353fd9fc8f9316672803f8f6933a33e40191b185d045817de48b7ec2520",
         "sourceDigests": [
-          "831bc3e6f74372e936d9f7ca063b119d551fe5ac39e39721d9f9683988b5389d"
+          "ba863532eda8f902cbdb621485de9241ac30d45e4f4467f3f4347b773bd487ab"
         ],
         "sourceRevisions": [
           {
             "sourceId": "cooling-capacity",
             "revision": "R18",
-            "digest": "831bc3e6f74372e936d9f7ca063b119d551fe5ac39e39721d9f9683988b5389d"
+            "digest": "ba863532eda8f902cbdb621485de9241ac30d45e4f4467f3f4347b773bd487ab"
           }
         ],
         "nodeDigests": {
@@ -130,7 +130,7 @@
         ],
         "compilerVersion": "0.1.0",
         "contractId": "contract:R18",
-        "digest": "aa87603bcc64cf1e8f7d81ecf49c7b54dd0d389fe67fdbea0828db6b55bdf8ba"
+        "digest": "190f24f573cf4383d6d27af318f08b3403c4f1a87fab7fba895bc5d854fed52c"
       }
     },
     "evidenceSnapshot": {
@@ -187,11 +187,12 @@
       },
       "approvalId": "approval-1",
       "engineeringGeneration": "R17",
-      "contractDigest": "2a9dad57e63e1b0d08a70d0b8e7a2027a7c6e5e8c59fb0bc488b187a57f693e9",
+      "contractDigest": "d361e68943766c0920f3af6d5ab56d4c24e28dd7c8a2d1df85dc165703c842d2",
       "dependencyClosure": [
         "CoolingSystem-CS1",
         "process.feed.adjust"
       ],
+      "dependencyClosureDigest": "5cf00cc8bad7cb7d535d888fdde18f1f110ac6ea257c14a4e92ac1266cf3f82e",
       "operationDigest": "a79de3992d2a16b7443ac1587a91ef52aa186a4505dcee1b674e3566fb47b059",
       "logicalOperationId": "op-001",
       "purpose": "cooling-constrained-feed-adjust",
@@ -208,10 +209,17 @@
         }
       },
       "evidenceSnapshotId": "snapshot:b98442baafe32783",
-      "evidenceSnapshotDigest": "b98442baafe32783e1718db71a21a8532992c7c2190617f43adcdfefb6af053b",
-      "dependencyClosureDigest": "5cf00cc8bad7cb7d535d888fdde18f1f110ac6ea257c14a4e92ac1266cf3f82e"
+      "evidenceSnapshotDigest": "b98442baafe32783e1718db71a21a8532992c7c2190617f43adcdfefb6af053b"
     },
     "changeImpact": {
+      "comparedFrom": {
+        "generation": "R17",
+        "contractDigest": "d361e68943766c0920f3af6d5ab56d4c24e28dd7c8a2d1df85dc165703c842d2"
+      },
+      "comparedTo": {
+        "generation": "R18",
+        "contractDigest": "190f24f573cf4383d6d27af318f08b3403c4f1a87fab7fba895bc5d854fed52c"
+      },
       "changed": [
         "engineering-source:cooling-capacity:R18",
         "plant-ir-node:CoolingSystem-CS1",
@@ -224,7 +232,8 @@
       "affectedPermits": [
         "permit:b8cb491a3e65"
       ],
-      "conservative": true
+      "conservative": true,
+      "coverage": "COMPLETE"
     },
     "events": [
       {
@@ -234,7 +243,7 @@
         "caseId": "cstr-walking-skeleton",
         "engineeringGeneration": "R17",
         "payload": {
-          "contractDigest": "2a9dad57e63e1b0d08a70d0b8e7a2027a7c6e5e8c59fb0bc488b187a57f693e9"
+          "contractDigest": "d361e68943766c0920f3af6d5ab56d4c24e28dd7c8a2d1df85dc165703c842d2"
         }
       },
       {
@@ -287,6 +296,17 @@
       "code": "ENGINEERING_BASIS_CHANGED",
       "effectCount": 0
     },
+    "staleWorkflow": {
+      "id": "op-001",
+      "status": "REJECTED",
+      "trace": [
+        "PROPOSED",
+        "ADMISSIBLE",
+        "AUTHORIZED",
+        "REVALIDATING",
+        "REJECTED"
+      ]
+    },
     "ambiguousCompletion": {
       "intendedAction": {
         "logicalOperationId": "op-002",
@@ -317,11 +337,12 @@
         },
         "approvalId": "approval-2",
         "engineeringGeneration": "R17",
-        "contractDigest": "2a9dad57e63e1b0d08a70d0b8e7a2027a7c6e5e8c59fb0bc488b187a57f693e9",
+        "contractDigest": "d361e68943766c0920f3af6d5ab56d4c24e28dd7c8a2d1df85dc165703c842d2",
         "dependencyClosure": [
           "CoolingSystem-CS1",
           "process.feed.adjust"
         ],
+        "dependencyClosureDigest": "5cf00cc8bad7cb7d535d888fdde18f1f110ac6ea257c14a4e92ac1266cf3f82e",
         "operationDigest": "a79de3992d2a16b7443ac1587a91ef52aa186a4505dcee1b674e3566fb47b059",
         "logicalOperationId": "op-002",
         "purpose": "cooling-constrained-feed-adjust",
@@ -338,15 +359,50 @@
           }
         },
         "evidenceSnapshotId": "snapshot:b98442baafe32783",
-        "evidenceSnapshotDigest": "b98442baafe32783e1718db71a21a8532992c7c2190617f43adcdfefb6af053b",
-        "dependencyClosureDigest": "5cf00cc8bad7cb7d535d888fdde18f1f110ac6ea257c14a4e92ac1266cf3f82e"
+        "evidenceSnapshotDigest": "b98442baafe32783e1718db71a21a8532992c7c2190617f43adcdfefb6af053b"
       },
       "dispatch": "SENT",
       "acknowledgement": "LOST",
       "workflow": {
         "status": "COMPLETION_UNKNOWN",
         "code": "COMPLETION_UNKNOWN",
-        "effectCount": 1
+        "receipt": {
+          "receiptId": "receipt:eab570c184d4d82e",
+          "logicalOperationId": "op-002",
+          "operationDigest": "a79de3992d2a16b7443ac1587a91ef52aa186a4505dcee1b674e3566fb47b059",
+          "acknowledgement": "LOST",
+          "simulatorEffectCount": 1,
+          "adapterId": "synthetic-cstr",
+          "adapterVersion": "1.0.0"
+        }
+      },
+      "workflowTrace": {
+        "id": "op-002",
+        "status": "COMPLETED",
+        "trace": [
+          "PROPOSED",
+          "ADMISSIBLE",
+          "AUTHORIZED",
+          "REVALIDATING",
+          "READY_TO_DISPATCH",
+          "DISPATCHING",
+          "COMPLETION_UNKNOWN",
+          "RECONCILING",
+          "COMPLETED"
+        ]
+      },
+      "counterfactual": {
+        "status": "MODEL_ACCEPTS_WITHIN_DOMAIN",
+        "adapterId": "synthetic-cstr",
+        "adapterVersion": "1.0.0",
+        "initialState": {
+          "setpoint": 120,
+          "processFlow": 120,
+          "effects": []
+        },
+        "initialStateDigest": "0b7b7c5c61cbf3353df2e57662a68bb9136deb2667ef6b5f60fd5632e65d5df7",
+        "operationDigest": "a79de3992d2a16b7443ac1587a91ef52aa186a4505dcee1b674e3566fb47b059",
+        "basis": "WITHIN_SYNTHETIC_BOUND"
       },
       "observedReadback": {
         "setpoint": 124,
@@ -357,7 +413,15 @@
       },
       "reconciliation": {
         "status": "RECONCILED",
-        "effectCount": 1
+        "receipt": {
+          "receiptId": "receipt:eab570c184d4d82e",
+          "logicalOperationId": "op-002",
+          "operationDigest": "a79de3992d2a16b7443ac1587a91ef52aa186a4505dcee1b674e3566fb47b059",
+          "acknowledgement": "LOST",
+          "simulatorEffectCount": 1,
+          "adapterId": "synthetic-cstr",
+          "adapterVersion": "1.0.0"
+        }
       },
       "outcome": {
         "status": "VERIFIED_MATCH",
@@ -369,21 +433,23 @@
             "unit": "kg/s"
           }
         },
-        "observedSetpoint": 124
+        "observedSetpoint": 124,
+        "receiptId": "receipt:eab570c184d4d82e"
       }
     }
   },
   "artifactDigests": {
-    "ambiguousCompletion": "12693de57790cc66920d6d8be1428a90c76f40a06b5098b0d71d9e48baa2e24c",
-    "changeImpact": "8000f77e16df1a0b4aa0b16ffa490e9275c2c5de5173dd3c01c4eeaf353d9352",
-    "engineering": "42b96a5279bdaff65180569c16de1765958fd11312effaf03d21920722b54d45",
-    "events": "16bfcfb45db9a7c3c78d45bed9208534a4e7d866fef983c639d7919936886007",
+    "ambiguousCompletion": "d7b0f4c27ce2d8e87da3f6fede7d1cb25de81bfbabd2387c901d430818e75522",
+    "changeImpact": "d85bbe29dc0cb335470b6b5b1969da25f480107be67299506e62a0b60dbe1221",
+    "engineering": "b66c1505b68ac1de984a486f8a134d391eda2adca52deac0b077147cdf6743d2",
+    "events": "2e419706a07e1c16f83051686522bfd5d49745fcdef4c6c94e60cf66cdb45afe",
     "evidenceSnapshot": "c371cab8d7b4ff4070c93b9135432b128aa132d686d11a26fda8f11d064ed585",
     "intendedAction": "e79d723fdeae725a3e7cd84286e8b675c2fb13861681660cde7fb7869b2b6652",
     "recordedAt": "1c70cc7d7f55673a946a6168737b6442dffc8c575a27767dbeafa4a30b8837ab",
-    "revisionBoundPermit": "84c35b3b94ae670427309b2e74ab080160b532ee6f09ca15df9e10811e1e3c23",
+    "revisionBoundPermit": "652028a962a1e31490a7e3d535a58e96000ebeea366aabf5dba7c2289a073b13",
     "schemaVersion": "e98460297c6fc39c3500917f12575865eb0b840e68ea6464d500f0743e8c878a",
-    "stalePermitOutcome": "e83d27b2a552cc1e184c0c10291511054cb35908f2ef4117ae61cfd7da3e1439"
+    "stalePermitOutcome": "e83d27b2a552cc1e184c0c10291511054cb35908f2ef4117ae61cfd7da3e1439",
+    "staleWorkflow": "bfc4d8deffe21d209dd6cb7cf3295c9dd8e676f5495b06850546257a87e44668"
   },
-  "manifestDigest": "73c404a42f57509aba5548f1f264fadcd46f99306ada1cf46b4b3b1a8191f9a5"
+  "manifestDigest": "6defa8fcd70815dfbb9f79c6a6cc17cbf1cb274f5d344608e4f1612cb51ee7b3"
 }

@@ -26,11 +26,11 @@ The demo proves two narrow invariants:
 1. R17 permits are rejected before dispatch after R18 changes the cooling dependency.
 2. A synthetic simulator effect that survives lost acknowledgement is reconciled without a second dispatch; its effect count remains one.
 
-The result names are intentionally limited to `MODEL_ACCEPTS_WITHIN_DOMAIN`, `MODEL_REJECTS`, and `MODEL_INCONCLUSIVE`. They are model results, not physical-safety claims.
+The result names are intentionally limited to `MODEL_ACCEPTS_WITHIN_DOMAIN`, `MODEL_REJECTS`, and `MODEL_INCONCLUSIVE`. They are model results, not physical-safety claims. Each result records the synthetic adapter/version plus digests of its initial state and requested operation.
 
 `pnpm demo` writes the deterministic synthetic bundle at `case-bundles/cstr-walking-skeleton.case.json`. Inspect it with `pnpm exec tsx apps/cli/src/index.ts case inspect`.
 
-The CLI also supports `pnpm exec tsx apps/cli/src/index.ts compile fixtures/cstr/engineering/R17.json`, `... contract inspect R17`, `... diff R17 R18`, `... demo stale-permit`, and `... demo ambiguous-completion`.
+The CLI also supports `pnpm exec tsx apps/cli/src/index.ts compile fixtures/cstr/engineering/R17.json`, `... contract inspect R17`, `... diff R17 R18`, `... demo stale-permit`, and `... demo ambiguous-completion`. The compile and diff commands parse the declared JSON fixture; `R17` and `R18` are merely path shorthands.
 
 ## Why authority becomes stale
 
@@ -46,6 +46,18 @@ Engineering sources -> Plant Contract -> evidence -> deterministic proposal
        -> pre-dispatch revalidation -> bounded executor -> simulator
        -> readback / reconciliation -> case bundle
 ```
+
+## Public evidence
+
+| Surface                 | What can be inspected here                                                                                                                                                                                                               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engineering             | Checked-in synthetic R17/R18 declarations compile into immutable, SHA-256-addressed Plant Contracts with source, node, provenance, dependency, and monitor records.                                                                      |
+| Revision semantics      | A change-impact artifact names the exact before/after contract digests. Dispatch accepts it only when it matches both the permit and current contract.                                                                                   |
+| Authority and execution | A permit binds one operation, evidence snapshot, dependency closure, approval lifetime, and contract basis. The executor accepts only the simulator-adapter port.                                                                        |
+| Recovery                | The deterministic acknowledgement-loss case records its receipt, unknown-completion state, reconciliation, readback, and final outcome.                                                                                                  |
+| Replay                  | The versioned case bundle verifies artifact digests, cross-artifact references, event IDs, workflow states, and simulator provenance. Digest verification detects modification; it does not establish an external identity or signature. |
+
+The repository contains deterministic unit, contract, integration, and adversarial tests for these paths. The public reference workflow store is in memory: it demonstrates explicit load/save and legal resume transitions, but it is not a production durable-host adapter.
 
 ## What Faultline is not
 

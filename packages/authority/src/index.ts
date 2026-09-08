@@ -8,7 +8,10 @@ import {
   type PermitId,
 } from '../../contracts/src/index.js';
 import type { AdmissibilityResult } from '../../admissibility/src/index.js';
+import type { EvidenceSnapshot } from '../../evidence/src/index.js';
+import type { ChangeImpact, PlantContractArtifact } from '../../plant-contract/src/index.js';
 import { operationDigest, type ActionIntent } from '../../proposal/src/index.js';
+
 export type Principal = { id: string; kind: 'HUMAN' | 'AGENT' | 'WORKFLOW' };
 export type Approval = {
   id: ApprovalId;
@@ -28,6 +31,7 @@ export type RevisionBoundPermit = {
   engineeringGeneration: EngineeringGenerationId;
   contractDigest: string;
   dependencyClosure: readonly string[];
+  dependencyClosureDigest: string;
   operationDigest: string;
   logicalOperationId: LogicalOperationId;
   purpose: string;
@@ -38,11 +42,34 @@ export type RevisionBoundPermit = {
   operation: ActionIntent['operation'];
   evidenceSnapshotId: EvidenceSnapshotId;
   evidenceSnapshotDigest: string;
-  dependencyClosureDigest: string;
 };
 export type AuthorityDecision =
-  { status: 'ADMIT'; permit: RevisionBoundPermit } | { status: 'DENY'; code: string };
-export type DependencyImpactStatus = 'AFFECTED' | 'UNAFFECTED' | 'UNCERTAIN';
+  | { status: 'ADMIT'; permit: RevisionBoundPermit }
+  | { status: 'DENY'; code: 'AUTHORITY_DENIED' | 'APPROVAL_EXPIRED' };
+export type DispatchRevalidationContext = {
+  now: string;
+  currentContract: PlantContractArtifact;
+  evidence: EvidenceSnapshot;
+  changeImpact?: ChangeImpact;
+};
+export type DispatchRevalidation =
+  | { status: 'VALID' }
+  | {
+      status: 'REQUIRES_REEVALUATION';
+      code:
+        | 'PERMIT_EXPIRED'
+        | 'EVIDENCE_STALE'
+        | 'EVIDENCE_SNAPSHOT_CHANGED'
+        | 'ENGINEERING_BASIS_CHANGED'
+        | 'DEPENDENCY_IMPACT_UNKNOWN';
+      details: Readonly<Record<string, unknown>>;
+    }
+  | {
+      status: 'REJECTED';
+      code: 'ACTION_ARGUMENTS_CHANGED' | 'PERMIT_BINDING_INVALID';
+      details: Readonly<Record<string, unknown>>;
+    };
+
 export const authorize = (
   principal: Principal,
   approval: Approval,
@@ -73,6 +100,7 @@ export const authorize = (
       engineeringGeneration: intent.engineeringGeneration,
       contractDigest: admissibility.contractDigest,
       dependencyClosure,
+      dependencyClosureDigest: digest(dependencyClosure),
       operationDigest: operationDigest(intent.operation),
       logicalOperationId: intent.logicalOperationId,
       purpose: intent.purpose,
@@ -83,30 +111,77 @@ export const authorize = (
       operation: intent.operation,
       evidenceSnapshotId: intent.evidenceSnapshotId,
       evidenceSnapshotDigest: admissibility.evidenceSnapshotDigest,
-      dependencyClosureDigest: digest(dependencyClosure),
     },
   };
 };
-export const revalidate = (
+
+export const revalidatePermitForDispatch = (
   permit: RevisionBoundPermit,
   intent: ActionIntent,
-  current: EngineeringGenerationId,
-  now: string,
-  impact: DependencyImpactStatus,
-  evidenceFresh = true,
-) =>
-  Date.parse(permit.expiresAt) <= Date.parse(now)
-    ? { status: 'REQUIRES_REEVALUATION' as const, code: 'PERMIT_EXPIRED' }
-    : !evidenceFresh
-      ? { status: 'REQUIRES_REEVALUATION' as const, code: 'EVIDENCE_STALE' }
-      : permit.logicalOperationId !== intent.logicalOperationId ||
-          permit.operationDigest !== operationDigest(intent.operation)
-        ? { status: 'REJECTED' as const, code: 'ACTION_ARGUMENTS_CHANGED' }
-        : permit.assetId !== intent.targetAssetId || permit.operation.target !== intent.operation.target
-          ? { status: 'REJECTED' as const, code: 'ACTION_ARGUMENTS_CHANGED' }
-          : permit.engineeringGeneration !== current && impact !== 'UNAFFECTED'
-            ? {
-                status: 'REQUIRES_REEVALUATION' as const,
-                code: impact === 'UNCERTAIN' ? 'DEPENDENCY_IMPACT_UNKNOWN' : 'ENGINEERING_BASIS_CHANGED',
-              }
-            : { status: 'VALID' as const };
+  context: DispatchRevalidationContext,
+): DispatchRevalidation => {
+  if (Date.parse(permit.expiresAt) <= Date.parse(context.now))
+    return { status: 'REQUIRES_REEVALUATION', code: 'PERMIT_EXPIRED', details: {} };
+  if (permit.dependencyClosureDigest !== digest(permit.dependencyClosure))
+    return {
+      status: 'REJECTED',
+      code: 'PERMIT_BINDING_INVALID',
+      details: { field: 'dependencyClosureDigest' },
+    };
+  if (permit.operationDigest !== operationDigest(permit.operation))
+    return {
+      status: 'REJECTED',
+      code: 'PERMIT_BINDING_INVALID',
+      details: { field: 'operationDigest' },
+    };
+  if (
+    permit.logicalOperationId !== intent.logicalOperationId ||
+    permit.operationDigest !== operationDigest(intent.operation) ||
+    permit.assetId !== intent.targetAssetId ||
+    permit.operation.target !== intent.operation.target
+  )
+    return { status: 'REJECTED', code: 'ACTION_ARGUMENTS_CHANGED', details: {} };
+  if (!context.evidence.fresh)
+    return {
+      status: 'REQUIRES_REEVALUATION',
+      code: 'EVIDENCE_STALE',
+      details: { snapshotId: context.evidence.snapshotId },
+    };
+  if (
+    context.evidence.snapshotId !== permit.evidenceSnapshotId ||
+    context.evidence.digest !== permit.evidenceSnapshotDigest
+  )
+    return {
+      status: 'REQUIRES_REEVALUATION',
+      code: 'EVIDENCE_SNAPSHOT_CHANGED',
+      details: {
+        permitSnapshotId: permit.evidenceSnapshotId,
+        currentSnapshotId: context.evidence.snapshotId,
+      },
+    };
+  if (context.currentContract.generation === permit.engineeringGeneration) {
+    return context.currentContract.digest === permit.contractDigest
+      ? { status: 'VALID' }
+      : {
+          status: 'REQUIRES_REEVALUATION',
+          code: 'ENGINEERING_BASIS_CHANGED',
+          details: { reason: 'CONTRACT_DIGEST_CHANGED_WITHIN_GENERATION' },
+        };
+  }
+  if (
+    !context.changeImpact ||
+    context.changeImpact.coverage !== 'COMPLETE' ||
+    context.changeImpact.comparedFrom.generation !== permit.engineeringGeneration ||
+    context.changeImpact.comparedFrom.contractDigest !== permit.contractDigest ||
+    context.changeImpact.comparedTo.generation !== context.currentContract.generation ||
+    context.changeImpact.comparedTo.contractDigest !== context.currentContract.digest
+  )
+    return { status: 'REQUIRES_REEVALUATION', code: 'DEPENDENCY_IMPACT_UNKNOWN', details: {} };
+  if (context.changeImpact.affectedPermits.includes(permit.permitId))
+    return {
+      status: 'REQUIRES_REEVALUATION',
+      code: 'ENGINEERING_BASIS_CHANGED',
+      details: { changed: context.changeImpact.changed, affected: context.changeImpact.affected },
+    };
+  return { status: 'VALID' };
+};

@@ -145,5 +145,61 @@ describe('Plant Contract compiler', () => {
     );
     expect(impact.affectedPermits).toEqual(['permit-001']);
     expect(impact.conservative).toBe(true);
+    expect(impact.coverage).toBe('COMPLETE');
+    expect(impact.comparedFrom).toEqual({ generation: r17.generation, contractDigest: r17.digest });
+    expect(impact.comparedTo).toEqual({ generation: r18.generation, contractDigest: r18.digest });
+  });
+  it('rejects duplicate source identities, unresolved topology, and incomplete constraint declarations', () => {
+    const baseline = inputFor('R17');
+    const source = baseline.sources[0];
+    const constraint = baseline.constraints[0];
+    if (!source || !constraint) throw new Error('fixture is incomplete');
+    const incompleteBound = {
+      id: constraint.id,
+      kind: constraint.kind,
+      capabilityId: constraint.capabilityId,
+      target: constraint.target,
+      sourceId: constraint.sourceId,
+    };
+    const result = compilePlantContract({
+      ...baseline,
+      sources: [source, source],
+      ir: {
+        ...baseline.ir,
+        edges: [
+          ...baseline.ir.edges,
+          { from: ids.asset('UNKNOWN'), to: ids.asset('FIC-101'), kind: 'REQUIRED' },
+        ],
+      },
+      constraints: [incompleteBound],
+    });
+    expect(result).toMatchObject({ ok: false });
+    if (!result.ok)
+      expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toEqual(
+        expect.arrayContaining([
+          'DUPLICATE_IDENTIFIER',
+          'UNRESOLVED_ASSET',
+          'INVALID_CAPABILITY_DECLARATION',
+        ]),
+      );
+  });
+  it('marks a removed engineering source as changed and traces its prior contract links', () => {
+    const r17 = compiled('R17');
+    const r18Input = inputFor('R18');
+    const capability = r18Input.capabilities[0];
+    if (!capability) throw new Error('fixture is missing capability');
+    const r18Result = compilePlantContract({
+      ...r18Input,
+      sources: [],
+      ir: { ...r18Input.ir, nodes: r18Input.ir.nodes.map((node) => ({ ...node, sourceIds: [] })) },
+      constraints: [],
+      capabilities: [{ ...capability, dependencies: [] }],
+    });
+    if (!r18Result.ok) throw new Error('expected reduced fixture to compile');
+    const impact = compareContracts(r17, r18Result.contract);
+    expect(impact.changed).toContain('engineering-source:cooling-capacity:REMOVED');
+    expect(impact.affected).toEqual(
+      expect.arrayContaining(['constraint:CoolingAvailable', 'capability:process.feed.adjust']),
+    );
   });
 });

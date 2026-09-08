@@ -4,22 +4,59 @@ import {
   compilePlantContract,
   InMemoryPlantContractRegistry,
 } from '../../../packages/plant-contract/src/index.js';
-import { makeSource, type PlantIR } from '../../../packages/plant-ir/src/index.js';
+import {
+  makeSource,
+  type PlantIR,
+  type SyntheticCstrEngineeringFixture,
+} from '../../../packages/plant-ir/src/index.js';
 import { InMemoryEvidenceStore } from '../../../packages/evidence/src/index.js';
 import { evaluateAdmissibility } from '../../../packages/admissibility/src/index.js';
 import { authorize } from '../../../packages/authority/src/index.js';
 import { DeterministicCstrSimulator } from '../../../packages/simulator/src/index.js';
 import { executeBounded, reconcile, reconcileOutcome } from '../../../packages/executor/src/index.js';
 import { createCaseBundle } from '../../../packages/case-bundle/src/index.js';
+import {
+  InMemoryDurableWorkflowStore,
+  transition,
+  type WorkflowState,
+  type WorkflowStatus,
+} from '../../../packages/workflow/src/index.js';
 const now = '2026-01-01T00:00:00.000Z';
-export const compileDemoGeneration = (generation: 'R17' | 'R18') => {
-  const g = ids.generation(generation);
+const beginWorkflow = (store: InMemoryDurableWorkflowStore, id: WorkflowState['id']) => {
+  const initial: WorkflowState = { id, status: 'PROPOSED', trace: ['PROPOSED'] };
+  store.save(initial);
+  return initial;
+};
+const persistTransition = (
+  store: InMemoryDurableWorkflowStore,
+  id: WorkflowState['id'],
+  status: WorkflowStatus,
+) => {
+  const prior = store.load(id);
+  if (!prior) throw new Error(`MISSING_WORKFLOW_STATE:${id}`);
+  const next = transition(prior, status);
+  store.save(next);
+  return next;
+};
+export const cstrFixtureFor = (generation: 'R17' | 'R18'): SyntheticCstrEngineeringFixture => ({
+  generation,
+  coolingAvailableCapacityPercent: generation === 'R17' ? 100 : 70,
+  feedAdjustMaxKgPerS: generation === 'R17' ? 124 : 110,
+  synthetic: true,
+});
+export const compileSyntheticCstrFixture = (fixture: SyntheticCstrEngineeringFixture) => {
+  const g = ids.generation(fixture.generation);
   const cooling = makeSource({
     sourceId: ids.source('cooling-capacity'),
-    revision: ids.revision(generation),
+    revision: ids.revision(fixture.generation),
     kind: 'OPERATING_ENVELOPE',
     scope: 'Unit-RX',
     approval: { status: 'APPROVED' },
+    declaration: {
+      coolingAvailableCapacityPercent: fixture.coolingAvailableCapacityPercent,
+      feedAdjustMaxKgPerS: fixture.feedAdjustMaxKgPerS,
+      synthetic: fixture.synthetic,
+    },
   });
   const ir: PlantIR = {
     plantId: ids.plant('DemoPlant-01'),
@@ -63,7 +100,7 @@ export const compileDemoGeneration = (generation: 'R17' | 'R18') => {
         kind: 'ARGUMENT_BOUND',
         capabilityId: ids.capability('process.feed.adjust'),
         target: ids.asset('FIC-101'),
-        max: { value: generation === 'R17' ? 124 : 110, unit: 'kg/s' },
+        max: { value: fixture.feedAdjustMaxKgPerS, unit: 'kg/s' },
         sourceId: cooling.sourceId,
       },
     ],
@@ -71,6 +108,8 @@ export const compileDemoGeneration = (generation: 'R17' | 'R18') => {
   if (!result.ok) throw new Error('compile failed');
   return { g, contract: result.contract };
 };
+export const compileDemoGeneration = (generation: 'R17' | 'R18') =>
+  compileSyntheticCstrFixture(cstrFixtureFor(generation));
 export const runDemos = () => {
   const r17 = compileDemoGeneration('R17');
   const r18 = compileDemoGeneration('R18');
@@ -130,14 +169,18 @@ export const runDemos = () => {
   const impact = compareContracts(r17.contract, r18.contract, [
     { permitId: authority.permit.permitId, dependencyClosure: authority.permit.dependencyClosure },
   ]);
+  const staleWorkflowStore = new InMemoryDurableWorkflowStore();
+  beginWorkflow(staleWorkflowStore, intent.logicalOperationId);
+  for (const status of ['ADMISSIBLE', 'AUTHORIZED', 'REVALIDATING'] as const)
+    persistTransition(staleWorkflowStore, intent.logicalOperationId, status);
   const stale = executeBounded(
     authority.permit,
     intent,
-    r18.g,
+    { now, currentContract: r18.contract, evidence: snapshot, changeImpact: impact },
     new DeterministicCstrSimulator(),
-    now,
-    impact.affectedPermits.includes(authority.permit.permitId) ? 'AFFECTED' : 'UNCERTAIN',
   );
+  if (stale.status !== 'REQUIRES_REEVALUATION') throw new Error('stale permit was not revalidated');
+  const staleWorkflow = persistTransition(staleWorkflowStore, intent.logicalOperationId, 'REJECTED');
   const recoveryIntent = {
     ...intent,
     logicalOperationId: ids.operation('op-002'),
@@ -161,17 +204,42 @@ export const runDemos = () => {
   );
   if (recoveryAuthority.status !== 'ADMIT') throw new Error('recovery authority denied');
   const simulator = new DeterministicCstrSimulator();
+  const counterfactual = simulator.simulate(simulator.snapshot(), recoveryIntent.operation);
+  if (counterfactual.status !== 'MODEL_ACCEPTS_WITHIN_DOMAIN')
+    throw new Error('recovery intent is outside the synthetic model');
+  const recoveryWorkflowStore = new InMemoryDurableWorkflowStore();
+  beginWorkflow(recoveryWorkflowStore, recoveryIntent.logicalOperationId);
+  for (const status of [
+    'ADMISSIBLE',
+    'AUTHORIZED',
+    'REVALIDATING',
+    'READY_TO_DISPATCH',
+    'DISPATCHING',
+  ] as const)
+    persistTransition(recoveryWorkflowStore, recoveryIntent.logicalOperationId, status);
   simulator.injectAcknowledgementLoss();
   const unknown = executeBounded(
     recoveryAuthority.permit,
     recoveryIntent,
-    r17.g,
+    { now, currentContract: r17.contract, evidence: snapshot },
     simulator,
-    now,
-    'UNAFFECTED',
   );
-  const recovered = reconcile(recoveryIntent, simulator);
-  const outcome = reconcileOutcome(recoveryIntent, simulator);
+  if (unknown.status !== 'COMPLETION_UNKNOWN') throw new Error('expected acknowledgement loss');
+  const unknownWorkflow = persistTransition(
+    recoveryWorkflowStore,
+    recoveryIntent.logicalOperationId,
+    'COMPLETION_UNKNOWN',
+  );
+  const recovered = reconcile(recoveryIntent, unknown.receipt, simulator);
+  persistTransition(recoveryWorkflowStore, recoveryIntent.logicalOperationId, 'RECONCILING');
+  if (recovered.status !== 'RECONCILED')
+    throw new Error('expected reconciliation to find the synthetic effect');
+  const recoveryWorkflow = persistTransition(
+    recoveryWorkflowStore,
+    recoveryIntent.logicalOperationId,
+    'COMPLETED',
+  );
+  const outcome = reconcileOutcome(recoveryIntent, unknown.receipt, simulator);
   const events = new InMemoryEventLog();
   events.append({
     eventId: 'event-001',
@@ -226,9 +294,15 @@ export const runDemos = () => {
     recoveryPermit: recoveryAuthority.permit,
     impact,
     stale,
+    staleEffectCount: stale.effectCount,
+    staleWorkflow,
     unknown,
+    unknownWorkflow,
+    recoveryReceipt: unknown.receipt,
+    counterfactual,
     recovered,
     outcome,
+    recoveryWorkflow,
     events: events.list(),
     readback: simulator.readback(),
     effectCount: simulator.effectCount(recoveryIntent.logicalOperationId),
@@ -247,12 +321,15 @@ export const createWalkingSkeletonBundle = () => {
     changeImpact: result.impact,
     events: result.events,
     stalePermitOutcome: result.stale,
+    staleWorkflow: result.staleWorkflow,
     ambiguousCompletion: {
       intendedAction: result.recoveryIntent,
       revisionBoundPermit: result.recoveryPermit,
       dispatch: 'SENT',
       acknowledgement: 'LOST',
       workflow: result.unknown,
+      workflowTrace: result.recoveryWorkflow,
+      counterfactual: result.counterfactual,
       observedReadback: result.readback,
       reconciliation: result.recovered,
       outcome: result.outcome,

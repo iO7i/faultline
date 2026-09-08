@@ -3,6 +3,7 @@ import {
   dimensionForUnit,
   JsonEngineeringFixtureAdapter,
   makeSource,
+  parseSyntheticCstrEngineeringFixture,
   unitMatchesDimension,
 } from './index.js';
 import { ids } from '../../contracts/src/index.js';
@@ -40,5 +41,23 @@ describe('engineering sources', () => {
       sources: [source],
     });
     expect((await adapter.load()).sources[0]?.sourceId).toBe(source.sourceId);
+  });
+  it('accepts only bounded synthetic CSTR fixture declarations', () => {
+    expect(
+      parseSyntheticCstrEngineeringFixture({
+        generation: 'R17',
+        coolingAvailableCapacityPercent: 100,
+        feedAdjustMaxKgPerS: 124,
+        synthetic: true,
+      }),
+    ).toMatchObject({ ok: true });
+    expect(
+      parseSyntheticCstrEngineeringFixture({
+        generation: 'R17',
+        coolingAvailableCapacityPercent: 101,
+        feedAdjustMaxKgPerS: 124,
+        synthetic: true,
+      }),
+    ).toMatchObject({ ok: false, error: 'INVALID_COOLING_CAPACITY_PERCENT' });
   });
 });

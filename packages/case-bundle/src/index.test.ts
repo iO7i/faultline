@@ -21,7 +21,12 @@ describe('case bundle', () => {
         operationDigest: 'wrong',
       },
     });
-    expect(crossReferenceErrors(bundle)).toContain('LOGICAL_OPERATION_REFERENCE_MISMATCH');
+    expect(crossReferenceErrors(bundle)).toContain('PRIMARY:LOGICAL_OPERATION_REFERENCE_MISMATCH');
     expect(verifyCaseBundle(bundle)).toBe(false);
+  });
+  it('rejects an unsupported schema version without weakening generic bundle verification', () => {
+    const bundle = createCaseBundle(id('case-3', 'CaseBundleId'), { schemaVersion: 'future-version' });
+    expect(verifyCaseBundle(bundle)).toBe(false);
+    expect(crossReferenceErrors(bundle)).toContain('SCHEMA:UNSUPPORTED_VERSION');
   });
 });
