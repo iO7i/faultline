@@ -5,6 +5,8 @@ export type Availability = Readonly<Record<EquipmentId, boolean>>;
 export type PlantState = Readonly<{
   tick: number;
   sourceRevision: 'R17' | 'R18';
+  /** Current normalized command applied to the P-101 actuator. */
+  pumpCommand: number;
   intakeFlow: number;
   pretreatmentFlow: number;
   pumpOutput: number;
@@ -42,6 +44,7 @@ const round = (value: number): number => Math.round(value * 1_000_000) / 1_000_0
 export const createInitialPlantState = (): PlantState => ({
   tick: 0,
   sourceRevision: 'R17',
+  pumpCommand: 0.4,
   intakeFlow: 0,
   pretreatmentFlow: 0,
   pumpOutput: 0,
@@ -61,7 +64,7 @@ export const createInitialPlantState = (): PlantState => ({
 export const stepPlant = (previous: PlantState, input: PlantInput = {}): PlantState => {
   const availability: Availability = { ...previous.availability, ...input.availability };
   const requestedFeed = clamp(finite(input.requestedFeed ?? 0.82));
-  const pumpCommand = clamp(finite(input.pumpCommand ?? 0.86));
+  const pumpCommand = clamp(finite(input.pumpCommand ?? previous.pumpCommand));
   const intakeFlow = availability['IN-101'] && availability['TK-101'] ? requestedFeed : 0;
   const pretreatmentFlow = availability['PT-101'] ? intakeFlow * 0.97 : 0;
   const pumpOutput = availability['P-101'] ? pretreatmentFlow * pumpCommand : 0;
@@ -73,6 +76,7 @@ export const stepPlant = (previous: PlantState, input: PlantInput = {}): PlantSt
   return {
     tick: previous.tick + 1,
     sourceRevision: input.sourceRevision ?? previous.sourceRevision,
+    pumpCommand,
     intakeFlow: round(intakeFlow),
     pretreatmentFlow: round(pretreatmentFlow),
     pumpOutput: round(pumpOutput),
@@ -95,6 +99,7 @@ export const arePlantValuesValid = (state: PlantState): boolean => {
     state.permeateFlow,
     state.brineFlow,
     state.pumpLoad,
+    state.pumpCommand,
     state.tank101Level,
     state.tank201Level,
   ];

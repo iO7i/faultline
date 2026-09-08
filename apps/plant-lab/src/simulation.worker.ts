@@ -8,6 +8,13 @@ import {
   type LabScenario,
 } from './faultline/bridge.js';
 import { createInitialPlantState, stepPlant, type PlantState } from './plant/model.js';
+import {
+  approveRevisedProposal,
+  importIncidentCapsule,
+  runIncident,
+  type IncidentSession,
+  type PlantIncidentExperiment,
+} from './incident.js';
 
 const TICK_MS = 100;
 
@@ -17,6 +24,9 @@ type WorkerCommand =
   | { type: 'resume' }
   | { type: 'step' }
   | { type: 'speed'; value: 0.5 | 1 | 2 }
+  | { type: 'incident-run'; experiment: PlantIncidentExperiment }
+  | { type: 'incident-approve-revised' }
+  | { type: 'incident-import'; capsule: unknown }
   | { type: 'dispose' };
 
 export type SimulationSnapshot = Readonly<{
@@ -32,7 +42,8 @@ export type SimulationSnapshot = Readonly<{
 }>;
 
 export type SimulationError = Readonly<{ type: 'error'; message: string }>;
-export type SimulationMessage = SimulationSnapshot | SimulationError;
+export type IncidentSnapshot = Readonly<{ type: 'incident'; session: IncidentSession }>;
+export type SimulationMessage = SimulationSnapshot | IncidentSnapshot | SimulationError;
 
 let timer: number | null = null;
 let speed: 0.5 | 1 | 2 = 1;
@@ -40,6 +51,7 @@ let paused = true;
 let trace = createFaultlineTrace('safe');
 let plant = createInitialPlantState();
 let currentViolation: AelViolation | null = null;
+let incident: IncidentSession | null = null;
 
 const stopTimer = () => {
   if (timer !== null) self.clearInterval(timer);
@@ -85,12 +97,33 @@ self.onmessage = (message: MessageEvent<WorkerCommand>) => {
     const command = message.data;
     if (command.type === 'start') {
       stopTimer();
+      incident = null;
       trace = createFaultlineTrace(command.scenario);
       plant = stepPlant(createInitialPlantState(), { requestedFeed: 0.82, pumpCommand: 0.86 });
       currentViolation = null;
       paused = false;
       post(initialTraceEvents(trace), null, false);
       schedule();
+      return;
+    }
+    if (command.type === 'incident-run') {
+      stopTimer();
+      paused = true;
+      incident = runIncident(command.experiment);
+      self.postMessage({ type: 'incident', session: incident } satisfies IncidentSnapshot);
+      return;
+    }
+    if (command.type === 'incident-approve-revised') {
+      if (!incident) throw new Error('PLANT_INCIDENT_NOT_STARTED');
+      incident = approveRevisedProposal(incident);
+      self.postMessage({ type: 'incident', session: incident } satisfies IncidentSnapshot);
+      return;
+    }
+    if (command.type === 'incident-import') {
+      stopTimer();
+      paused = true;
+      incident = importIncidentCapsule(command.capsule);
+      self.postMessage({ type: 'incident', session: incident } satisfies IncidentSnapshot);
       return;
     }
     if (command.type === 'pause') {

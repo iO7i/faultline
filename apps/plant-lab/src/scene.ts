@@ -20,6 +20,12 @@ export const RENDERED_EQUIPMENT_IDS = EQUIPMENT_IDS;
 type EquipmentVisual = { meshes: Mesh[]; material: StandardMaterial; rotor?: TransformNode };
 type FlowClass = keyof ScenePresentationState['flowSpeed'];
 type FlowMarker = { mesh: Mesh; path: readonly Vector3[]; kind: FlowClass; offset: number };
+export type PlantCameraState = Readonly<{
+  alpha: number;
+  beta: number;
+  radius: number;
+  target: readonly [number, number, number];
+}>;
 
 const palette = {
   normal: new Color3(0.17, 0.43, 0.54),
@@ -85,10 +91,17 @@ export class PlantScene {
   #shadows: ShadowGenerator | null = null;
   #onResize = () => this.resizeCamera();
   #onSelected: (id: EquipmentId) => void;
+  #onCameraChanged: ((camera: PlantCameraState) => void) | null;
+  #lastCamera = '';
   #time = 0;
 
-  constructor(canvas: HTMLCanvasElement, onSelected: (id: EquipmentId) => void) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    onSelected: (id: EquipmentId) => void,
+    onCameraChanged: ((camera: PlantCameraState) => void) | null = null,
+  ) {
     this.#onSelected = onSelected;
+    this.#onCameraChanged = onCameraChanged;
     this.engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
     this.scene = new Scene(this.engine);
     this.scene.clearColor = new Color4(0.035, 0.11, 0.17, 1);
@@ -97,6 +110,7 @@ export class PlantScene {
     this.buildEquipment();
     this.bindPicking();
     this.scene.onBeforeRenderObservable.add(() => this.animate());
+    this.scene.onAfterRenderObservable.add(() => this.reportCamera());
     window.addEventListener('resize', this.#onResize);
     this.resizeCamera();
     this.engine.runRenderLoop(() => this.scene.render());
@@ -493,6 +507,25 @@ export class PlantScene {
     if (pump?.rotor) pump.rotor.rotation.x += this.#presentation.pumpAnimation * 0.18;
   }
 
+  private cameraState(): PlantCameraState {
+    const target = this.#camera.target;
+    return {
+      alpha: this.#camera.alpha,
+      beta: this.#camera.beta,
+      radius: this.#camera.radius,
+      target: [target.x, target.y, target.z],
+    };
+  }
+
+  private reportCamera() {
+    if (!this.#onCameraChanged) return;
+    const state = this.cameraState();
+    const serialized = JSON.stringify(state);
+    if (serialized === this.#lastCamera) return;
+    this.#lastCamera = serialized;
+    this.#onCameraChanged(state);
+  }
+
   update(presentation: ScenePresentationState) {
     this.#presentation = presentation;
     for (const id of EQUIPMENT_IDS) {
@@ -516,6 +549,20 @@ export class PlantScene {
     this.#camera.alpha = -1.05;
     this.#camera.beta = 1.05;
     this.#camera.target.copyFromFloats(0, 0, 0);
+    this.#lastCamera = '';
+  }
+
+  setCamera(camera: PlantCameraState) {
+    this.#camera.alpha = camera.alpha;
+    this.#camera.beta = camera.beta;
+    this.#camera.radius = camera.radius;
+    this.#camera.target.copyFromFloats(...camera.target);
+    this.#lastCamera = JSON.stringify(this.cameraState());
+  }
+
+  focus(id: EquipmentId) {
+    if (id === 'P-101') this.#camera.target.copyFromFloats(2, 0.8, -0.6);
+    this.#lastCamera = '';
   }
 
   diagnostics() {

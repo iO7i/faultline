@@ -2,6 +2,7 @@ node_modules/
 dist/
 coverage/
 output/playwright/
+output/plant-lab-v0.2/
 test-results/
 .playwright-cli/
 case-bundles/*/

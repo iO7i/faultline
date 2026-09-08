@@ -20,6 +20,8 @@ export type EquipmentSpec = Readonly<{
   kind: EquipmentKind;
   summary: string;
   critical: boolean;
+  /** Layout metadata only; connections remain in PROCESS_CONNECTIONS. */
+  schematic: Readonly<{ column: number; row: number }>;
 }>;
 
 export const EQUIPMENT: readonly EquipmentSpec[] = [
@@ -29,14 +31,23 @@ export const EQUIPMENT: readonly EquipmentSpec[] = [
     kind: 'intake',
     summary: 'Synthetic intake boundary.',
     critical: true,
+    schematic: { column: 0, row: 1 },
   },
-  { id: 'TK-101', name: 'Raw-water tank', kind: 'tank', summary: 'Normalized feed buffer.', critical: true },
+  {
+    id: 'TK-101',
+    name: 'Raw-water tank',
+    kind: 'tank',
+    summary: 'Normalized feed buffer.',
+    critical: true,
+    schematic: { column: 1, row: 1 },
+  },
   {
     id: 'PT-101',
     name: 'Pretreatment skid',
     kind: 'pretreatment',
     summary: 'Simplified pretreatment stage.',
     critical: true,
+    schematic: { column: 2, row: 1 },
   },
   {
     id: 'P-101',
@@ -44,6 +55,7 @@ export const EQUIPMENT: readonly EquipmentSpec[] = [
     kind: 'pump',
     summary: 'Action-associated pump fixture.',
     critical: true,
+    schematic: { column: 3, row: 1 },
   },
   {
     id: 'RO-101',
@@ -51,6 +63,7 @@ export const EQUIPMENT: readonly EquipmentSpec[] = [
     kind: 'ro-rack',
     summary: 'Six-vessel reverse-osmosis rack.',
     critical: true,
+    schematic: { column: 4, row: 1 },
   },
   {
     id: 'TK-201',
@@ -58,6 +71,7 @@ export const EQUIPMENT: readonly EquipmentSpec[] = [
     kind: 'tank',
     summary: 'Normalized product-water buffer.',
     critical: true,
+    schematic: { column: 5, row: 0 },
   },
   {
     id: 'BR-101',
@@ -65,6 +79,7 @@ export const EQUIPMENT: readonly EquipmentSpec[] = [
     kind: 'brine',
     summary: 'Synthetic concentrate discharge.',
     critical: false,
+    schematic: { column: 5, row: 2 },
   },
   {
     id: 'CB-01',
@@ -72,6 +87,7 @@ export const EQUIPMENT: readonly EquipmentSpec[] = [
     kind: 'control-building',
     summary: 'Local control-room context.',
     critical: false,
+    schematic: { column: 2, row: 3 },
   },
 ] as const;
 

@@ -16,6 +16,7 @@ jobs:
       - run: pnpm test
       - run: pnpm plant-lab:build
       - run: pnpm plant-lab:test
+      - run: pnpm plant-lab:replay
       - run: pnpm demo:stale-permit
       - run: pnpm demo:ambiguous-completion
       - run: pnpm case:verify

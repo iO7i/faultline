@@ -20,7 +20,8 @@
     "plant-lab:dev": "vite --config apps/plant-lab/vite.config.ts",
     "plant-lab:build": "vite build --config apps/plant-lab/vite.config.ts",
     "plant-lab:test": "vitest run apps/plant-lab/src",
-    "plant-lab:e2e": "playwright test --config apps/plant-lab/playwright.config.ts"
+    "plant-lab:e2e": "playwright test --config apps/plant-lab/playwright.config.ts",
+    "plant-lab:replay": "tsx apps/plant-lab/src/headless.ts"
   },
   "devDependencies": {
     "@babylonjs/core": "^9.25.0",
