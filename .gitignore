@@ -1,5 +1,8 @@
 node_modules/
 dist/
 coverage/
+output/playwright/
+test-results/
+.playwright-cli/
 case-bundles/*/
 !case-bundles/.gitkeep
