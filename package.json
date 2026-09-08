@@ -1,0 +1,29 @@
+{
+  "name": "faultline",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.6.5",
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "demo": "tsx apps/cli/src/index.ts demo",
+    "demo:stale-permit": "tsx apps/cli/src/index.ts demo stale-permit",
+    "demo:ambiguous-completion": "tsx apps/cli/src/index.ts demo ambiguous-completion",
+    "case:verify": "tsx apps/cli/src/index.ts case verify",
+    "case:inspect": "tsx apps/cli/src/index.ts case inspect"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@types/node": "^22.13.4",
+    "eslint": "^9.20.1",
+    "prettier": "^3.5.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.0",
+    "vitest": "^3.0.7"
+  }
+}
