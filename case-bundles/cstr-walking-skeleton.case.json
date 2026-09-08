@@ -1,0 +1,332 @@
+{
+  "caseBundleId": "cstr-walking-skeleton",
+  "artifacts": {
+    "schemaVersion": "faultline.case-bundle.v1",
+    "recordedAt": "2026-01-01T00:00:00.000Z",
+    "engineering": {
+      "r17": {
+        "generation": "R17",
+        "plantIrDigest": "4d209ebf1f29e30d14265984329ee9ea7c5d3609c7bbbcb459c12c82c51ddcd2",
+        "sourceDigests": [
+          "feeef1b3bb3cb593f11a0fff791265d6eba37a38b704b4509bc4c102f0551fcf"
+        ],
+        "sourceRevisions": [
+          {
+            "sourceId": "cooling-capacity",
+            "revision": "R17",
+            "digest": "feeef1b3bb3cb593f11a0fff791265d6eba37a38b704b4509bc4c102f0551fcf"
+          }
+        ],
+        "nodeDigests": {
+          "CoolingSystem-CS1": "9b3ec7f57605c3776c14371fd18263739b2dcccf43634fe0eccb45a01ff28054",
+          "FIC-101": "0a90d19ebadea5be63b18d21208e3951f0229bf5062a25928f0e9ef28cc1b1e8"
+        },
+        "capabilities": [
+          {
+            "id": "process.feed.adjust",
+            "version": "1",
+            "target": "FIC-101",
+            "allowedMode": "NORMAL",
+            "dependencies": [
+              "CoolingSystem-CS1"
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "id": "CoolingAvailable",
+            "kind": "ARGUMENT_BOUND",
+            "capabilityId": "process.feed.adjust",
+            "target": "FIC-101",
+            "max": {
+              "value": 124,
+              "unit": "kg/s"
+            },
+            "sourceId": "cooling-capacity"
+          }
+        ],
+        "dependencyGraph": {
+          "process.feed.adjust": [
+            "CoolingSystem-CS1"
+          ]
+        },
+        "provenanceIndex": {
+          "cooling-capacity": [
+            "capability:process.feed.adjust",
+            "constraint:CoolingAvailable",
+            "node:CoolingSystem-CS1",
+            "node:FIC-101"
+          ]
+        },
+        "runtimeMonitors": [
+          {
+            "kind": "ARGUMENT_BOUND",
+            "constraintId": "CoolingAvailable"
+          }
+        ],
+        "compilerVersion": "0.1.0",
+        "contractId": "contract:R17",
+        "digest": "2a9dad57e63e1b0d08a70d0b8e7a2027a7c6e5e8c59fb0bc488b187a57f693e9"
+      },
+      "r18": {
+        "generation": "R18",
+        "plantIrDigest": "bedc4353fd9fc8f9316672803f8f6933a33e40191b185d045817de48b7ec2520",
+        "sourceDigests": [
+          "831bc3e6f74372e936d9f7ca063b119d551fe5ac39e39721d9f9683988b5389d"
+        ],
+        "sourceRevisions": [
+          {
+            "sourceId": "cooling-capacity",
+            "revision": "R18",
+            "digest": "831bc3e6f74372e936d9f7ca063b119d551fe5ac39e39721d9f9683988b5389d"
+          }
+        ],
+        "nodeDigests": {
+          "CoolingSystem-CS1": "61efdbf4fbe877b426c9df89fe088b1238eea007fe8b8ea64cc0cb447327e5ea",
+          "FIC-101": "9e7bf5ac2effd1f37b7a3bc10b8ec152f46aae6c85c6f5779abcf9ce160bafc1"
+        },
+        "capabilities": [
+          {
+            "id": "process.feed.adjust",
+            "version": "1",
+            "target": "FIC-101",
+            "allowedMode": "NORMAL",
+            "dependencies": [
+              "CoolingSystem-CS1"
+            ]
+          }
+        ],
+        "constraints": [
+          {
+            "id": "CoolingAvailable",
+            "kind": "ARGUMENT_BOUND",
+            "capabilityId": "process.feed.adjust",
+            "target": "FIC-101",
+            "max": {
+              "value": 110,
+              "unit": "kg/s"
+            },
+            "sourceId": "cooling-capacity"
+          }
+        ],
+        "dependencyGraph": {
+          "process.feed.adjust": [
+            "CoolingSystem-CS1"
+          ]
+        },
+        "provenanceIndex": {
+          "cooling-capacity": [
+            "capability:process.feed.adjust",
+            "constraint:CoolingAvailable",
+            "node:CoolingSystem-CS1",
+            "node:FIC-101"
+          ]
+        },
+        "runtimeMonitors": [
+          {
+            "kind": "ARGUMENT_BOUND",
+            "constraintId": "CoolingAvailable"
+          }
+        ],
+        "compilerVersion": "0.1.0",
+        "contractId": "contract:R18",
+        "digest": "aa87603bcc64cf1e8f7d81ecf49c7b54dd0d389fe67fdbea0828db6b55bdf8ba"
+      }
+    },
+    "evidenceSnapshot": {
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "generation": "R17",
+      "evidence": [
+        {
+          "evidenceId": "e-1",
+          "plantId": "DemoPlant-01",
+          "assetId": "TT-204",
+          "generation": "R17",
+          "measuredAt": "2026-01-01T00:00:00.000Z",
+          "ingestedAt": "2026-01-01T00:00:00.000Z",
+          "source": "synthetic",
+          "sourceRevision": "1",
+          "class": "SIMULATED",
+          "quality": "GOOD",
+          "value": {
+            "value": 82,
+            "unit": "degC"
+          }
+        }
+      ],
+      "fresh": true,
+      "snapshotId": "snapshot:b98442baafe32783",
+      "digest": "b98442baafe32783e1718db71a21a8532992c7c2190617f43adcdfefb6af053b"
+    },
+    "intendedAction": {
+      "logicalOperationId": "op-001",
+      "proposalId": "proposal-1",
+      "plantId": "DemoPlant-01",
+      "unitId": "Unit-RX",
+      "targetAssetId": "FIC-101",
+      "engineeringGeneration": "R17",
+      "capabilityId": "process.feed.adjust",
+      "purpose": "cooling-constrained-feed-adjust",
+      "operation": {
+        "kind": "SETPOINT_CHANGE",
+        "target": "FIC-101",
+        "value": {
+          "value": 124,
+          "unit": "kg/s"
+        }
+      },
+      "evidenceSnapshotId": "snapshot:b98442baafe32783"
+    },
+    "revisionBoundPermit": {
+      "permitId": "permit:b8cb491a3e65",
+      "issuedAt": "2026-01-01T00:00:00.000Z",
+      "expiresAt": "2026-01-01T01:00:00.000Z",
+      "principal": {
+        "id": "operator-1",
+        "kind": "HUMAN"
+      },
+      "approvalId": "approval-1",
+      "engineeringGeneration": "R17",
+      "contractDigest": "2a9dad57e63e1b0d08a70d0b8e7a2027a7c6e5e8c59fb0bc488b187a57f693e9",
+      "dependencyClosure": [
+        "CoolingSystem-CS1",
+        "process.feed.adjust"
+      ],
+      "operationDigest": "a79de3992d2a16b7443ac1587a91ef52aa186a4505dcee1b674e3566fb47b059",
+      "logicalOperationId": "op-001",
+      "purpose": "cooling-constrained-feed-adjust",
+      "plantId": "DemoPlant-01",
+      "unitId": "Unit-RX",
+      "assetId": "FIC-101",
+      "capabilityId": "process.feed.adjust",
+      "operation": {
+        "kind": "SETPOINT_CHANGE",
+        "target": "FIC-101",
+        "value": {
+          "value": 124,
+          "unit": "kg/s"
+        }
+      },
+      "evidenceSnapshotId": "snapshot:b98442baafe32783",
+      "evidenceSnapshotDigest": "b98442baafe32783e1718db71a21a8532992c7c2190617f43adcdfefb6af053b",
+      "dependencyClosureDigest": "5cf00cc8bad7cb7d535d888fdde18f1f110ac6ea257c14a4e92ac1266cf3f82e"
+    },
+    "changeImpact": {
+      "changed": [
+        "engineering-source:cooling-capacity:R18",
+        "plant-ir-node:CoolingSystem-CS1",
+        "plant-ir-node:FIC-101"
+      ],
+      "affected": [
+        "capability:process.feed.adjust",
+        "constraint:CoolingAvailable"
+      ],
+      "affectedPermits": [
+        "permit:b8cb491a3e65"
+      ],
+      "conservative": true
+    },
+    "stalePermitOutcome": {
+      "status": "REQUIRES_REEVALUATION",
+      "code": "ENGINEERING_BASIS_CHANGED",
+      "effectCount": 0
+    },
+    "ambiguousCompletion": {
+      "intendedAction": {
+        "logicalOperationId": "op-002",
+        "proposalId": "proposal-2",
+        "plantId": "DemoPlant-01",
+        "unitId": "Unit-RX",
+        "targetAssetId": "FIC-101",
+        "engineeringGeneration": "R17",
+        "capabilityId": "process.feed.adjust",
+        "purpose": "cooling-constrained-feed-adjust",
+        "operation": {
+          "kind": "SETPOINT_CHANGE",
+          "target": "FIC-101",
+          "value": {
+            "value": 124,
+            "unit": "kg/s"
+          }
+        },
+        "evidenceSnapshotId": "snapshot:b98442baafe32783"
+      },
+      "revisionBoundPermit": {
+        "permitId": "permit:73bc71d94975",
+        "issuedAt": "2026-01-01T00:00:00.000Z",
+        "expiresAt": "2026-01-01T01:00:00.000Z",
+        "principal": {
+          "id": "operator-1",
+          "kind": "HUMAN"
+        },
+        "approvalId": "approval-2",
+        "engineeringGeneration": "R17",
+        "contractDigest": "2a9dad57e63e1b0d08a70d0b8e7a2027a7c6e5e8c59fb0bc488b187a57f693e9",
+        "dependencyClosure": [
+          "CoolingSystem-CS1",
+          "process.feed.adjust"
+        ],
+        "operationDigest": "a79de3992d2a16b7443ac1587a91ef52aa186a4505dcee1b674e3566fb47b059",
+        "logicalOperationId": "op-002",
+        "purpose": "cooling-constrained-feed-adjust",
+        "plantId": "DemoPlant-01",
+        "unitId": "Unit-RX",
+        "assetId": "FIC-101",
+        "capabilityId": "process.feed.adjust",
+        "operation": {
+          "kind": "SETPOINT_CHANGE",
+          "target": "FIC-101",
+          "value": {
+            "value": 124,
+            "unit": "kg/s"
+          }
+        },
+        "evidenceSnapshotId": "snapshot:b98442baafe32783",
+        "evidenceSnapshotDigest": "b98442baafe32783e1718db71a21a8532992c7c2190617f43adcdfefb6af053b",
+        "dependencyClosureDigest": "5cf00cc8bad7cb7d535d888fdde18f1f110ac6ea257c14a4e92ac1266cf3f82e"
+      },
+      "dispatch": "SENT",
+      "acknowledgement": "LOST",
+      "workflow": {
+        "status": "COMPLETION_UNKNOWN",
+        "code": "COMPLETION_UNKNOWN",
+        "effectCount": 1
+      },
+      "observedReadback": {
+        "setpoint": 124,
+        "processFlow": 121.7,
+        "effects": [
+          "op-002"
+        ]
+      },
+      "reconciliation": {
+        "status": "RECONCILED",
+        "effectCount": 1
+      },
+      "outcome": {
+        "status": "VERIFIED_MATCH",
+        "intended": {
+          "kind": "SETPOINT_CHANGE",
+          "target": "FIC-101",
+          "value": {
+            "value": 124,
+            "unit": "kg/s"
+          }
+        },
+        "observedSetpoint": 124
+      }
+    }
+  },
+  "artifactDigests": {
+    "ambiguousCompletion": "12693de57790cc66920d6d8be1428a90c76f40a06b5098b0d71d9e48baa2e24c",
+    "changeImpact": "8000f77e16df1a0b4aa0b16ffa490e9275c2c5de5173dd3c01c4eeaf353d9352",
+    "engineering": "42b96a5279bdaff65180569c16de1765958fd11312effaf03d21920722b54d45",
+    "evidenceSnapshot": "c371cab8d7b4ff4070c93b9135432b128aa132d686d11a26fda8f11d064ed585",
+    "intendedAction": "e79d723fdeae725a3e7cd84286e8b675c2fb13861681660cde7fb7869b2b6652",
+    "recordedAt": "1c70cc7d7f55673a946a6168737b6442dffc8c575a27767dbeafa4a30b8837ab",
+    "revisionBoundPermit": "84c35b3b94ae670427309b2e74ab080160b532ee6f09ca15df9e10811e1e3c23",
+    "schemaVersion": "e98460297c6fc39c3500917f12575865eb0b840e68ea6464d500f0743e8c878a",
+    "stalePermitOutcome": "e83d27b2a552cc1e184c0c10291511054cb35908f2ef4117ae61cfd7da3e1439"
+  },
+  "manifestDigest": "d3e027be770a56ab9ca5efade76a610d2b3575169343c2519d55345208eb52af"
+}
