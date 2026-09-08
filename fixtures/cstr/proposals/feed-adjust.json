@@ -1,0 +1,4 @@
+{
+  "proposalId": "proposal-1",
+  "operation": { "kind": "SETPOINT_CHANGE", "target": "FIC-101", "value": { "value": 124, "unit": "kg/s" } }
+}
