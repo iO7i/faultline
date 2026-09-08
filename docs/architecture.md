@@ -13,6 +13,8 @@ plant evidence -> deterministic proposal -> admissibility -> revision-bound perm
         -> readback / reconciliation -> replayable case bundle + structured domain events
 
 engineering revision -> contract diff -> declared dependency impact -> reevaluate affected authority
+
+synthetic execution IR -> deterministic scheduler -> AEL checker -> counterexample capsule -> replay
 ```
 
 The package boundaries express this direction: `contracts` holds only shared vocabulary; `plant-ir` and `plant-contract` establish engineering truth; `evidence` and `proposal` do not issue authority; `authority` issues a narrow permit only after admissibility; `workflow` coordinates state; `executor` accepts only the simulator-adapter port; and `case-bundle` records rather than decides policy.
@@ -20,3 +22,5 @@ The package boundaries express this direction: `contracts` holds only shared voc
 The workflow package defines legal transitions plus a load/save store boundary. This reference uses an in-memory adapter to expose resume semantics during a single run; it does not claim process-restart persistence. A durable host adapter belongs behind that boundary.
 
 The deterministic CSTR is intentionally a small model, not an industrial process model. Its only job in this foundation is to make counterfactual provenance, dispatch, lost acknowledgement, readback, and operation-ID reconciliation observable.
+
+The systematic counterexample engine is a second, separate simulator-only surface. It models only the causality required to test consequential execution: principal, tenant, logical operation, exact arguments, authority revision, worker state, committed effect, and accounting evidence. It does not connect to the CSTR, a provider, an LLM, or a physical process.

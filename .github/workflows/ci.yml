@@ -6,7 +6,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 10 }
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
@@ -20,3 +19,5 @@ jobs:
       - run: pnpm case:verify
       - run: pnpm exec tsx apps/cli/src/index.ts compile fixtures/cstr/engineering/R17.json
       - run: pnpm exec tsx apps/cli/src/index.ts diff R17 R18
+      - run: pnpm check:refund
+      - run: pnpm replay:refund
