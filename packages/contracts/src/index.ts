@@ -96,11 +96,38 @@ const normalize = (value: unknown): unknown =>
 export const canonicalize = (value: unknown): string => JSON.stringify(normalize(value));
 export const digest = (value: unknown): string =>
   createHash('sha256').update(canonicalize(value)).digest('hex');
+export type FaultlineEventType =
+  | 'plant_contract.compiled'
+  | 'engineering_generation.advanced'
+  | 'change_impact.computed'
+  | 'proposal.created'
+  | 'admissibility.evaluated'
+  | 'authority.admitted'
+  | 'permit.issued'
+  | 'dispatch.revalidation_failed'
+  | 'execution.dispatched'
+  | 'execution.acknowledgement_lost'
+  | 'execution.completion_unknown'
+  | 'reconciliation.started'
+  | 'reconciliation.existing_effect_found'
+  | 'readback.recorded'
+  | 'outcome.reconciled'
+  | 'case_bundle.completed';
 export type DomainEvent = {
   eventId: string;
-  type: string;
+  type: FaultlineEventType;
   at: string;
   caseId: string;
   logicalOperationId?: LogicalOperationId;
   engineeringGeneration?: EngineeringGenerationId;
+  payload: Readonly<Record<string, unknown>>;
 };
+export class InMemoryEventLog {
+  #events: DomainEvent[] = [];
+  append(event: DomainEvent) {
+    this.#events.push(structuredClone(event));
+  }
+  list() {
+    return this.#events.map((event) => structuredClone(event));
+  }
+}

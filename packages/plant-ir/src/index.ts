@@ -75,6 +75,16 @@ export type PlantIR = {
   nodes: readonly PlantNode[];
   edges: readonly TopologyEdge[];
 };
+export type EngineeringSourceBundle = { ir: PlantIR; sources: readonly EngineeringSource[] };
+export interface EngineeringSourceAdapter {
+  load(): Promise<EngineeringSourceBundle>;
+}
+export class JsonEngineeringFixtureAdapter implements EngineeringSourceAdapter {
+  constructor(private readonly bundle: EngineeringSourceBundle) {}
+  async load() {
+    return structuredClone(this.bundle);
+  }
+}
 export const plantIrDigest = (ir: PlantIR) =>
   digest({
     ...ir,

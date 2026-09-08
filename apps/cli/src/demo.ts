@@ -1,4 +1,4 @@
-import { ids } from '../../../packages/contracts/src/index.js';
+import { ids, InMemoryEventLog } from '../../../packages/contracts/src/index.js';
 import {
   compareContracts,
   compilePlantContract,
@@ -172,6 +172,50 @@ export const runDemos = () => {
   );
   const recovered = reconcile(recoveryIntent, simulator);
   const outcome = reconcileOutcome(recoveryIntent, simulator);
+  const events = new InMemoryEventLog();
+  events.append({
+    eventId: 'event-001',
+    type: 'plant_contract.compiled',
+    at: now,
+    caseId: 'cstr-walking-skeleton',
+    engineeringGeneration: r17.g,
+    payload: { contractDigest: r17.contract.digest },
+  });
+  events.append({
+    eventId: 'event-002',
+    type: 'change_impact.computed',
+    at: now,
+    caseId: 'cstr-walking-skeleton',
+    engineeringGeneration: r18.g,
+    payload: { affected: impact.affected },
+  });
+  events.append({
+    eventId: 'event-003',
+    type: 'dispatch.revalidation_failed',
+    at: now,
+    caseId: 'cstr-walking-skeleton',
+    logicalOperationId: intent.logicalOperationId,
+    engineeringGeneration: r18.g,
+    payload: { code: stale.code },
+  });
+  events.append({
+    eventId: 'event-004',
+    type: 'execution.acknowledgement_lost',
+    at: now,
+    caseId: 'cstr-walking-skeleton',
+    logicalOperationId: recoveryIntent.logicalOperationId,
+    engineeringGeneration: r17.g,
+    payload: {},
+  });
+  events.append({
+    eventId: 'event-005',
+    type: 'outcome.reconciled',
+    at: now,
+    caseId: 'cstr-walking-skeleton',
+    logicalOperationId: recoveryIntent.logicalOperationId,
+    engineeringGeneration: r17.g,
+    payload: { status: outcome.status },
+  });
   return {
     r17,
     r18,
@@ -185,6 +229,7 @@ export const runDemos = () => {
     unknown,
     recovered,
     outcome,
+    events: events.list(),
     readback: simulator.readback(),
     effectCount: simulator.effectCount(recoveryIntent.logicalOperationId),
   };
@@ -200,6 +245,7 @@ export const createWalkingSkeletonBundle = () => {
     intendedAction: result.intent,
     revisionBoundPermit: result.permit,
     changeImpact: result.impact,
+    events: result.events,
     stalePermitOutcome: result.stale,
     ambiguousCompletion: {
       intendedAction: result.recoveryIntent,

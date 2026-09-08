@@ -10,7 +10,7 @@ approved engineering sources
         -> Plant Contract compiler -> immutable Plant Contract
 plant evidence -> deterministic proposal -> admissibility -> revision-bound permit
         -> workflow -> pre-dispatch revalidation -> bounded executor -> simulator
-        -> readback / reconciliation -> replayable case bundle
+        -> readback / reconciliation -> replayable case bundle + structured domain events
 
 engineering revision -> contract diff -> declared dependency impact -> reevaluate affected authority
 ```

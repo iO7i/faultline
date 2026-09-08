@@ -69,3 +69,14 @@ export const evaluateAdmissibility = (
     ],
   };
 };
+export const fullReevaluate = evaluateAdmissibility;
+export const incrementalReevaluate = (
+  contract: PlantContractArtifact,
+  evidence: EvidenceSnapshot,
+  intent: ActionIntent,
+  dependencyCoverageComplete: boolean,
+): AdmissibilityResult => {
+  // This foundation has no partial evaluator yet; incomplete coverage deliberately falls back to full evaluation.
+  void dependencyCoverageComplete;
+  return fullReevaluate(contract, evidence, intent);
+};

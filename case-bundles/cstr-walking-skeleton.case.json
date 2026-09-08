@@ -226,6 +226,62 @@
       ],
       "conservative": true
     },
+    "events": [
+      {
+        "eventId": "event-001",
+        "type": "plant_contract.compiled",
+        "at": "2026-01-01T00:00:00.000Z",
+        "caseId": "cstr-walking-skeleton",
+        "engineeringGeneration": "R17",
+        "payload": {
+          "contractDigest": "2a9dad57e63e1b0d08a70d0b8e7a2027a7c6e5e8c59fb0bc488b187a57f693e9"
+        }
+      },
+      {
+        "eventId": "event-002",
+        "type": "change_impact.computed",
+        "at": "2026-01-01T00:00:00.000Z",
+        "caseId": "cstr-walking-skeleton",
+        "engineeringGeneration": "R18",
+        "payload": {
+          "affected": [
+            "capability:process.feed.adjust",
+            "constraint:CoolingAvailable"
+          ]
+        }
+      },
+      {
+        "eventId": "event-003",
+        "type": "dispatch.revalidation_failed",
+        "at": "2026-01-01T00:00:00.000Z",
+        "caseId": "cstr-walking-skeleton",
+        "logicalOperationId": "op-001",
+        "engineeringGeneration": "R18",
+        "payload": {
+          "code": "ENGINEERING_BASIS_CHANGED"
+        }
+      },
+      {
+        "eventId": "event-004",
+        "type": "execution.acknowledgement_lost",
+        "at": "2026-01-01T00:00:00.000Z",
+        "caseId": "cstr-walking-skeleton",
+        "logicalOperationId": "op-002",
+        "engineeringGeneration": "R17",
+        "payload": {}
+      },
+      {
+        "eventId": "event-005",
+        "type": "outcome.reconciled",
+        "at": "2026-01-01T00:00:00.000Z",
+        "caseId": "cstr-walking-skeleton",
+        "logicalOperationId": "op-002",
+        "engineeringGeneration": "R17",
+        "payload": {
+          "status": "VERIFIED_MATCH"
+        }
+      }
+    ],
     "stalePermitOutcome": {
       "status": "REQUIRES_REEVALUATION",
       "code": "ENGINEERING_BASIS_CHANGED",
@@ -321,6 +377,7 @@
     "ambiguousCompletion": "12693de57790cc66920d6d8be1428a90c76f40a06b5098b0d71d9e48baa2e24c",
     "changeImpact": "8000f77e16df1a0b4aa0b16ffa490e9275c2c5de5173dd3c01c4eeaf353d9352",
     "engineering": "42b96a5279bdaff65180569c16de1765958fd11312effaf03d21920722b54d45",
+    "events": "16bfcfb45db9a7c3c78d45bed9208534a4e7d866fef983c639d7919936886007",
     "evidenceSnapshot": "c371cab8d7b4ff4070c93b9135432b128aa132d686d11a26fda8f11d064ed585",
     "intendedAction": "e79d723fdeae725a3e7cd84286e8b675c2fb13861681660cde7fb7869b2b6652",
     "recordedAt": "1c70cc7d7f55673a946a6168737b6442dffc8c575a27767dbeafa4a30b8837ab",
@@ -328,5 +385,5 @@
     "schemaVersion": "e98460297c6fc39c3500917f12575865eb0b840e68ea6464d500f0743e8c878a",
     "stalePermitOutcome": "e83d27b2a552cc1e184c0c10291511054cb35908f2ef4117ae61cfd7da3e1439"
   },
-  "manifestDigest": "d3e027be770a56ab9ca5efade76a610d2b3575169343c2519d55345208eb52af"
+  "manifestDigest": "73c404a42f57509aba5548f1f264fadcd46f99306ada1cf46b4b3b1a8191f9a5"
 }
