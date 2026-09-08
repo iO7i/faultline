@@ -67,6 +67,47 @@ The included `refund-stale-approval` model intentionally represents an unsafe wo
 
 This is exhaustive only within the checked-in model and explicit depth/state bounds; it is not a proof about production commerce systems, providers, or arbitrary workflows. [Read the AEL model and bounds.](docs/systematic-counterexamples.md)
 
+## Plant Lab v0.2 — Replayable Incident Workbench
+
+Faultline Plant Lab is an experimental browser workbench for one synthetic consequential-execution incident in a simplified reverse-osmosis desalination train. A deterministic Worker-owned normalized process model drives procedural Babylon.js geometry; the same pure incident controller can also reproduce the result headlessly. The existing AEL checker evaluates the resulting execution evidence independently of the controller policy.
+
+![Synthetic Plant Lab stale-authority trace](apps/plant-lab/plant-lab-stale-i3.png)
+
+```bash
+pnpm plant-lab:dev
+pnpm plant-lab:build
+pnpm plant-lab:test
+pnpm plant-lab:e2e
+pnpm plant-lab:replay
+```
+
+The `P-101` incident compares exactly two execution policies from the same serialized checkpoint: `approval-only` and `revalidate-at-effect-boundary`. Its normalized fixture values are deliberately synthetic: initial command `0.40`; R17 declared maximum `0.80`; proposed command `0.70`; R18 declared maximum `0.55`; and a fresh R18 command `0.50`. They are not real pump operating limits.
+
+The three timing controls make the distinction inspectable:
+
+- **Before approval:** R18 is already current; both policies authorize and apply the fresh `0.50` R18 operation.
+- **After approval / before effect:** approval-only commits `0.70` under R17 while R18 is current, and AEL reports `I3_STALE_AUTHORITY_CANNOT_COMMIT`. The guarded policy rejects that stale operation, then applies the fresh `0.50` R18 operation.
+- **After valid effect:** `0.70` commits while R17 is current and R18 arrives only after readback; neither policy reports a retroactive I3.
+
+Example headless result:
+
+```text
+PLANT LAB INCIDENT
+Timing:                         after-approval-before-effect
+Approval-only:                  I3_STALE_AUTHORITY_CANNOT_COMMIT
+Revalidate-at-effect-boundary:  PASS
+Approval-only P-101 command:    0.70
+Safe branch P-101 command:      0.50
+```
+
+The workbench generates a compact process schematic from the semantic equipment registry and process connections, aligns it with the 3D P-101 selection and evidence timeline, and exports a versioned local JSON incident capsule. Import validates its schema and semantic digest, then recomputes the verdicts using the pure incident runner; camera and other presentation metadata are excluded from the digest. No backend, external runtime requests, or analytics are involved.
+
+> The browser simulator models authority revalidation and effect commit as one deterministic transition. This demonstrates the intended correctness boundary; it does not establish atomicity for arbitrary distributed services or physical controllers.
+
+`RUN SAFE`, `STALE AUTHORITY`, and `REPLAY COUNTEREXAMPLE` remain as v0.1 public AEL reference paths. The process values are normalized and deterministic—not engineering-grade—and the scene does not control a physical plant.
+
+The browser build keeps the public AEL source intact. Its Vite configuration supplies only a narrow browser-compatible SHA-256 adapter for the published Node `node:crypto` call; deterministic tests compare its digest result with Node and browser smoke coverage exercises the same AEL trace.
+
 ## Public evidence
 
 | Surface                 | What can be inspected here                                                                                                                                                                                                               |

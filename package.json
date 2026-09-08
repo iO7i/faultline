@@ -16,16 +16,24 @@
     "case:verify": "tsx apps/cli/src/index.ts case verify",
     "case:inspect": "tsx apps/cli/src/index.ts case inspect",
     "check:refund": "tsx apps/cli/src/index.ts check examples/refund",
-    "replay:refund": "tsx apps/cli/src/index.ts replay failures/FL-0001.json"
+    "replay:refund": "tsx apps/cli/src/index.ts replay failures/FL-0001.json",
+    "plant-lab:dev": "vite --config apps/plant-lab/vite.config.ts",
+    "plant-lab:build": "vite build --config apps/plant-lab/vite.config.ts",
+    "plant-lab:test": "vitest run apps/plant-lab/src",
+    "plant-lab:e2e": "playwright test --config apps/plant-lab/playwright.config.ts",
+    "plant-lab:replay": "tsx apps/plant-lab/src/headless.ts"
   },
   "devDependencies": {
+    "@babylonjs/core": "^9.25.0",
     "@eslint/js": "^9.20.0",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.13.4",
     "eslint": "^9.20.1",
     "prettier": "^3.5.1",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.0",
+    "vite": "^8.2.2",
     "vitest": "^3.0.7"
   }
 }

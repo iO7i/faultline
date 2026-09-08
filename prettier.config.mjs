@@ -1,1 +1,1 @@
-export default { singleQuote: true, trailingComma: 'all', printWidth: 110 };
+export default { singleQuote: true, trailingComma: 'all', printWidth: 110, endOfLine: 'auto' };
