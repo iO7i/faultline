@@ -19,6 +19,8 @@ pnpm build
 pnpm test
 pnpm demo
 pnpm case:verify
+pnpm check:refund
+pnpm replay:refund
 ```
 
 The demo proves two narrow invariants:
@@ -30,7 +32,7 @@ The result names are intentionally limited to `MODEL_ACCEPTS_WITHIN_DOMAIN`, `MO
 
 `pnpm demo` writes the deterministic synthetic bundle at `case-bundles/cstr-walking-skeleton.case.json`. Inspect it with `pnpm exec tsx apps/cli/src/index.ts case inspect`.
 
-The CLI also supports `pnpm exec tsx apps/cli/src/index.ts compile fixtures/cstr/engineering/R17.json`, `... contract inspect R17`, `... diff R17 R18`, `... demo stale-permit`, and `... demo ambiguous-completion`. The compile and diff commands parse the declared JSON fixture; `R17` and `R18` are merely path shorthands.
+The CLI also supports `pnpm exec tsx apps/cli/src/index.ts compile fixtures/cstr/engineering/R17.json`, `... contract inspect R17`, `... diff R17 R18`, `... demo stale-permit`, `... demo ambiguous-completion`, `... check examples/refund`, and `... replay failures/FL-0001.json`. The compile and diff commands parse the declared JSON fixture; `R17` and `R18` are merely path shorthands.
 
 ## Why authority becomes stale
 
@@ -47,6 +49,24 @@ Engineering sources -> Plant Contract -> evidence -> deterministic proposal
        -> readback / reconciliation -> case bundle
 ```
 
+## Systematic counterexamples
+
+Faultline also contains a bounded, deterministic explorer for a synthetic refund workflow. Rather than requiring a hand-authored failure trace, it enumerates scheduler choices—dispatch, supersession, crash/restart, response loss, readback, and bounded retry behavior—then checks **Authority-Effect Linearizability (AEL)** after each transition.
+
+```text
+execution IR -> deterministic scheduler -> AEL checker
+                                           |
+                                           v
+                                  shortest counterexample
+                                           |
+                                           v
+                                  JSON replay capsule
+```
+
+The included `refund-stale-approval` model intentionally represents an unsafe worker. The explorer discovers a stale R17 effect after R18 is current, shrinks it to three transitions, writes `failures/FL-0001.json`, and reproduces it with `faultline replay`. The response-loss and cross-tenant-resume reference scenarios must remain violation-free within their published bounds.
+
+This is exhaustive only within the checked-in model and explicit depth/state bounds; it is not a proof about production commerce systems, providers, or arbitrary workflows. [Read the AEL model and bounds.](docs/systematic-counterexamples.md)
+
 ## Public evidence
 
 | Surface                 | What can be inspected here                                                                                                                                                                                                               |
@@ -56,6 +76,7 @@ Engineering sources -> Plant Contract -> evidence -> deterministic proposal
 | Authority and execution | A permit binds one operation, evidence snapshot, dependency closure, approval lifetime, and contract basis. The executor accepts only the simulator-adapter port.                                                                        |
 | Recovery                | The deterministic acknowledgement-loss case records its receipt, unknown-completion state, reconciliation, readback, and final outcome.                                                                                                  |
 | Replay                  | The versioned case bundle verifies artifact digests, cross-artifact references, event IDs, workflow states, and simulator provenance. Digest verification detects modification; it does not establish an external identity or signature. |
+| Systematic exploration  | A bounded BFS explores a typed synthetic execution model, checks six AEL invariants, shrinks discovered violations, and replays a JSON counterexample capsule.                                                                           |
 
 The repository contains deterministic unit, contract, integration, and adversarial tests for these paths. The public reference workflow store is in memory: it demonstrates explicit load/save and legal resume transitions, but it is not a production durable-host adapter.
 
@@ -74,5 +95,6 @@ Faultline grew out of reliability patterns developed while building Vertex, a pr
 - [Trust boundaries](docs/trust-boundaries.md)
 - [R17 to R18 demo](docs/r17-r18-demo.md)
 - [Crash recovery demo](docs/crash-recovery-demo.md)
+- [Systematic Counterexamples](docs/systematic-counterexamples.md)
 - [Non-goals](docs/non-goals.md)
 - [Roadmap](docs/roadmap.md)

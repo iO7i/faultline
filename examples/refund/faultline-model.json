@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "faultline.systematic-check.v1",
+  "model": "synthetic-refund-workflow",
+  "scenarios": [
+    {
+      "id": "refund-stale-approval",
+      "expected": "COUNTEREXAMPLE",
+      "bounds": { "maxDepth": 7, "maxStates": 2000 }
+    },
+    {
+      "id": "commit-response-lost",
+      "expected": "PASS",
+      "bounds": { "maxDepth": 8, "maxStates": 2000 }
+    },
+    {
+      "id": "cross-tenant-resume",
+      "expected": "PASS",
+      "bounds": { "maxDepth": 8, "maxStates": 2000 }
+    }
+  ]
+}

@@ -44,6 +44,8 @@ importers:
 
   packages/contracts: {}
 
+  packages/counterexample: {}
+
   packages/evidence: {}
 
   packages/executor: {}
