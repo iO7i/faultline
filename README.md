@@ -11,16 +11,20 @@ ENGINEERING != EVIDENCE != REASONING != ADMISSIBILITY != AUTHORITY
             != ORCHESTRATION != EXECUTION != VERIFICATION
 ```
 
-## 90-second demo
+## One-command proof
+
+After installing dependencies with `pnpm install --frozen-lockfile`, run:
 
 ```bash
-pnpm install
-pnpm build
-pnpm test
 pnpm demo
-pnpm case:verify
-pnpm check:refund
-pnpm replay:refund
+```
+
+That command runs the two shortest public proofs: stale authority is rejected before dispatch, and a lost acknowledgement is reconciled without redispatching an already-applied effect.
+
+For the full local verification surface:
+
+```bash
+pnpm build && pnpm test && pnpm case:verify && pnpm check:refund && pnpm replay:refund
 ```
 
 The demo proves two narrow invariants:
