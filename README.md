@@ -1,17 +1,10 @@
 # Faultline
 
-Faultline tests whether an industrial AI action is still justified when it is about to execute, not merely when it was proposed.
+Faultline is a TypeScript reference implementation for a specific failure case: an industrial action was approved under one engineering revision, that revision changed, and the worker tried to dispatch the old approval. It compiles declared inputs into Plant Contracts, binds proposals and permits to those contracts, rechecks the current revision before dispatch, and records simulator outcomes through readback and reconciliation.
 
-Faultline is a change-aware assurance boundary for industrial AI actions. It compiles declared engineering inputs into deterministic Plant Contracts, binds proposed actions and permits to that basis, rejects relevant stale authority before dispatch, operates only against a synthetic deterministic simulator, and records outcomes through readback and reconciliation.
+> Faultline operates against simulated processes. It does not authorize or perform physical plant control, and it is not a process-safety certification system.
 
-> The Faultline reference implementation operates against simulated processes. It does not authorize or perform physical plant control and is not a process-safety certification system.
-
-```text
-ENGINEERING != EVIDENCE != REASONING != ADMISSIBILITY != AUTHORITY
-            != ORCHESTRATION != EXECUTION != VERIFICATION
-```
-
-## One-command proof
+## Run the proof
 
 After installing dependencies with `pnpm install --frozen-lockfile`, run:
 
@@ -19,7 +12,7 @@ After installing dependencies with `pnpm install --frozen-lockfile`, run:
 pnpm demo
 ```
 
-That command runs the two shortest public proofs: stale authority is rejected before dispatch, and a lost acknowledgement is reconciled without redispatching an already-applied effect.
+That command runs two short proofs: stale authority is rejected before dispatch, and a lost acknowledgement is reconciled without redispatching an effect that already applied.
 
 For the full local verification surface:
 
@@ -27,22 +20,22 @@ For the full local verification surface:
 pnpm build && pnpm test && pnpm case:verify && pnpm check:refund && pnpm replay:refund
 ```
 
-The demo proves two narrow invariants:
+The demo covers two cases:
 
 1. R17 permits are rejected before dispatch after R18 changes the cooling dependency.
 2. A synthetic simulator effect that survives lost acknowledgement is reconciled without a second dispatch; its effect count remains one.
 
-The result names are intentionally limited to `MODEL_ACCEPTS_WITHIN_DOMAIN`, `MODEL_REJECTS`, and `MODEL_INCONCLUSIVE`. They are model results, not physical-safety claims. Each result records the synthetic adapter/version plus digests of its initial state and requested operation.
+Results are limited to `MODEL_ACCEPTS_WITHIN_DOMAIN`, `MODEL_REJECTS`, and `MODEL_INCONCLUSIVE`. They describe the model, not physical safety. Each result records the synthetic adapter/version plus digests of its initial state and requested operation.
 
 `pnpm demo` writes the deterministic synthetic bundle at `case-bundles/cstr-walking-skeleton.case.json`. Inspect it with `pnpm exec tsx apps/cli/src/index.ts case inspect`.
 
 The CLI also supports `pnpm exec tsx apps/cli/src/index.ts compile fixtures/cstr/engineering/R17.json`, `... contract inspect R17`, `... diff R17 R18`, `... demo stale-permit`, `... demo ambiguous-completion`, `... check examples/refund`, and `... replay failures/FL-0001.json`. The compile and diff commands parse the declared JSON fixture; `R17` and `R18` are merely path shorthands.
 
-## Why authority becomes stale
+## Two failure cases
 
-An approval is not valid forever. The R17 scenario authorizes one exact feed-controller setpoint under an R17 cooling-capacity basis. R18 changes that basis. Its declared dependency impact intersects the permit, so pre-dispatch validation returns `REQUIRES_REEVALUATION / ENGINEERING_BASIS_CHANGED` and the simulator is not called.
+An approval is not valid forever. The R17 scenario authorizes one exact feed-controller setpoint under an R17 cooling-capacity basis. R18 changes that basis. Its declared dependency impact intersects the permit, so pre-dispatch validation returns `REQUIRES_REEVALUATION / ENGINEERING_BASIS_CHANGED`; the simulator is not called.
 
-The second scenario applies a synthetic effect and loses its acknowledgement. Faultline does not infer either success or failure: it marks completion unknown, reads back the operation-ID ledger, and suppresses redispatch when the effect already exists.
+The second scenario applies a synthetic effect and loses its acknowledgement. Faultline marks completion unknown, reads back the operation-ID ledger, and suppresses redispatch when the effect is already present.
 
 ## Architecture
 
@@ -125,11 +118,9 @@ The browser build keeps the public AEL source intact. Its Vite configuration sup
 
 The repository contains deterministic unit, contract, integration, and adversarial tests for these paths. The public reference workflow store is in memory: it demonstrates explicit load/save and legal resume transitions, but it is not a production durable-host adapter.
 
-## What Faultline is not
+## Scope and lineage
 
-Faultline is not a DCS, PLC runtime, SIS, autonomous plant operator, process-safety certification system, universal simulator, digital-twin platform, full DEXPI implementation, or replacement for engineering review. There is no live plant actuation code in this repository.
-
-## Design lineage
+Faultline is a simulator-only reference implementation. It is not a DCS, PLC runtime, SIS, autonomous plant operator, process-safety certification system, universal simulator, digital-twin platform, full DEXPI implementation, or replacement for engineering review. There is no live plant actuation code in this repository.
 
 Faultline grew out of reliability patterns developed while building Vertex, a private commerce intelligence and execution platform. It independently generalizes evidence, authority, durable-work, generation-fencing, and reconciliation ideas into industrial-native semantics: compiled engineering contracts, revision dependency tracking, and revision-bound permits. It has no Vertex dependency or infrastructure requirement.
 
